@@ -2,8 +2,10 @@ package copter
 
 import (
 	"github.com/julienschmidt/httprouter"
+	"github.com/stretchr/graceful"
 	"gopkg.in/unrolled/render.v1"
 	"net/http"
+	"time"
 )
 
 type Copter struct {
@@ -71,8 +73,23 @@ func (c *Copter) Run(addr string) {
 	}
 }
 
+func (c *Copter) RunAndGracefulShutdown(addr string, timeout time.Duration) {
+	graceful.Run(addr, timeout, c)
+}
+
 func (c *Copter) RunTLS(addr string, cert string, key string) {
 	if err := http.ListenAndServeTLS(addr, cert, key, c); err != nil {
+		panic(err)
+	}
+}
+
+func (c *Copter) RunTLSAndGracefulShutdown(addr string, cert string, key string, timeout time.Duration) {
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: c,
+	}
+
+	if err := graceful.ListenAndServeTLS(srv, cert, key, timeout); err != nil {
 		panic(err)
 	}
 }
