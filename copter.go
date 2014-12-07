@@ -21,13 +21,20 @@ func New() *Copter {
 	}
 }
 
+func Default() *Copter {
+	c := New()
+	c.Use(Recovery())
+	c.Use(Logger())
+	return c
+}
+
 func (c *Copter) handle(method, path string, handlers []HandlerFunc) {
 	handlers = c.combineHandlers(handlers)
 	c.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		context := &C{
 			Params:   params,
-			Req:      req,
-			Res:      w,
+			Request:  req,
+			Writer:   w,
 			render:   c.render,
 			index:    -1,
 			handlers: handlers,
@@ -54,7 +61,7 @@ func (c *Copter) POST(path string, handlers ...HandlerFunc) {
 func (c *Copter) Static(path string, root http.Dir) {
 	fileServer := http.StripPrefix(path, http.FileServer(root))
 	c.GET(path+"/*filepath", func(c *C) {
-		fileServer.ServeHTTP(c.Res, c.Req)
+		fileServer.ServeHTTP(c.Writer, c.Request)
 	})
 }
 
