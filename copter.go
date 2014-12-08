@@ -18,6 +18,7 @@ type Copter struct {
 	handlers        []HandlerFunc
 	notfoundHandler HandlerFunc
 	panicHandler    HandlerFunc
+	csrfHandler     HandlerFunc
 	csrf            bool
 }
 
@@ -58,6 +59,10 @@ func (c *Copter) EnableCSRF() {
 	c.csrf = true
 }
 
+func (c *Copter) CSRFFailed(h HandlerFunc) {
+	c.csrfHandler = h
+}
+
 func (c *Copter) NotFound(h HandlerFunc) {
 	c.notfoundHandler = h
 	c.httprouter.NotFound = func(w http.ResponseWriter, r *http.Request) {
@@ -90,26 +95,31 @@ func (c *Copter) Static(path string, root http.Dir) {
 	})
 }
 
-func (c *Copter) csrfHandler() http.Handler {
+func (c *Copter) getCSRFHandler() http.Handler {
 	if c.csrf {
-		return nosurf.New(c)
+		csrf := nosurf.New(c)
+		csrf.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			context := createContext(w, r, httprouter.Params{}, c.render)
+			c.csrfHandler(context)
+		}))
+		return csrf
 	}
 
 	return http.Handler(c)
 }
 
 func (c *Copter) Run(addr string) {
-	if err := http.ListenAndServe(addr, c.csrfHandler()); err != nil {
+	if err := http.ListenAndServe(addr, c.getCSRFHandler()); err != nil {
 		panic(err)
 	}
 }
 
 func (c *Copter) RunAndGracefulShutdown(addr string, timeout time.Duration) {
-	graceful.Run(addr, timeout, c.csrfHandler())
+	graceful.Run(addr, timeout, c.getCSRFHandler())
 }
 
 func (c *Copter) RunTLS(addr string, cert string, key string) {
-	if err := http.ListenAndServeTLS(addr, cert, key, c.csrfHandler()); err != nil {
+	if err := http.ListenAndServeTLS(addr, cert, key, c.getCSRFHandler()); err != nil {
 		panic(err)
 	}
 }
@@ -117,7 +127,7 @@ func (c *Copter) RunTLS(addr string, cert string, key string) {
 func (c *Copter) RunTLSAndGracefulShutdown(addr string, cert string, key string, timeout time.Duration) {
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: c.csrfHandler(),
+		Handler: c.getCSRFHandler(),
 	}
 
 	if err := graceful.ListenAndServeTLS(srv, cert, key, timeout); err != nil {
