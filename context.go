@@ -3,7 +3,6 @@ package copter
 import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
 	"gopkg.in/unrolled/render.v1"
 	"net/http"
 	"strings"
@@ -27,7 +26,6 @@ type C struct {
 	handlers            []HandlerFunc
 	notfoundHandlerFunc HandlerFunc
 	panicHandlerFunc    HandlerFunc
-	errorHandler        HandlerFunc
 	//recovery
 	Recovery interface{}
 }
@@ -96,10 +94,6 @@ func (c *C) Panic(err error) {
 
 func (c *C) NotFound() {
 	c.notfoundHandlerFunc(c)
-}
-
-func (c *C) CSRFToken() string {
-	return nosurf.Token(c.Request)
 }
 
 func (c *C) Next() {

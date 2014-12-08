@@ -2,7 +2,6 @@ package copter
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
 	"github.com/stretchr/graceful"
 	"gopkg.in/unrolled/render.v1"
 	"net/http"
@@ -23,6 +22,7 @@ type Copter struct {
 }
 
 type HandlerFunc func(c *C)
+type RenderOptions render.Options
 
 func New() *Copter {
 	return &Copter{
@@ -38,74 +38,8 @@ func Default() *Copter {
 	return c
 }
 
-func (c *Copter) handle(method, path string, handlers []HandlerFunc) {
-	handlers = c.combineHandlers(handlers)
-	c.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		context := createContext(w, req, params, c.render)
-		context.handlers = handlers
-		context.notfoundHandlerFunc = c.notfoundHandlerFunc
-		context.panicHandlerFunc = c.panicHandlerFunc
-		context.Next()
-	})
-}
-
-type RenderOptions render.Options
-
 func (c *Copter) SetRenderOptions(options RenderOptions) {
 	c.render = render.New(render.Options(options))
-}
-
-func (c *Copter) EnableCSRF() {
-	c.csrf = true
-}
-
-func (c *Copter) CSRFFailed(h HandlerFunc) {
-	c.csrfHandlerFunc = h
-}
-
-func (c *Copter) NotFound(h HandlerFunc) {
-	c.notfoundHandlerFunc = h
-	c.httprouter.NotFound = func(w http.ResponseWriter, r *http.Request) {
-		context := createContext(w, r, httprouter.Params{}, c.render)
-		h(context)
-	}
-}
-
-func (c *Copter) Panic(h HandlerFunc) {
-	c.panicHandlerFunc = h
-	c.httprouter.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
-		context := createContext(w, r, httprouter.Params{}, c.render)
-		context.Recovery = rcv
-		h(context)
-	}
-}
-
-func (c *Copter) GET(path string, handlers ...HandlerFunc) {
-	c.handle("GET", path, handlers)
-}
-
-func (c *Copter) POST(path string, handlers ...HandlerFunc) {
-	c.handle("POST", path, handlers)
-}
-
-func (c *Copter) Static(path string, root http.Dir) {
-	fileServer := http.StripPrefix(path, http.FileServer(root))
-	c.GET(path+"/*filepath", func(c *C) {
-		fileServer.ServeHTTP(c.Writer, c.Request)
-	})
-}
-
-func (c *Copter) csrfHandler() http.Handler {
-	if c.csrf {
-		csrf := nosurf.New(c)
-		csrf.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			context := createContext(w, r, httprouter.Params{}, c.render)
-			c.csrfHandlerFunc(context)
-		}))
-		return csrf
-	}
-
-	return http.Handler(c)
 }
 
 func (c *Copter) Run(addr string) {
@@ -143,12 +77,4 @@ func (c *Copter) Use(middlewares ...HandlerFunc) {
 	for _, handler := range middlewares {
 		c.handlers = append(c.handlers, handler)
 	}
-}
-
-func (c *Copter) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
-	s := len(c.handlers) + len(handlers)
-	h := make([]HandlerFunc, 0, s)
-	h = append(h, c.handlers...)
-	h = append(h, handlers...)
-	return h
 }
