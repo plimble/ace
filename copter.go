@@ -2,6 +2,7 @@ package copter
 
 import (
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/nosurf"
 	"github.com/stretchr/graceful"
 	"gopkg.in/unrolled/render.v1"
 	"net/http"
@@ -17,6 +18,7 @@ type Copter struct {
 	handlers        []HandlerFunc
 	notfoundHandler HandlerFunc
 	panicHandler    HandlerFunc
+	csrf            bool
 }
 
 type HandlerFunc func(c *C)
@@ -52,6 +54,10 @@ func (c *Copter) SetRenderOptions(options RenderOptions) {
 	c.render = render.New(render.Options(options))
 }
 
+func (c *Copter) EnableCSRF() {
+	c.csrf = true
+}
+
 func (c *Copter) NotFound(h HandlerFunc) {
 	c.notfoundHandler = h
 	c.httprouter.NotFound = func(w http.ResponseWriter, r *http.Request) {
@@ -84,18 +90,26 @@ func (c *Copter) Static(path string, root http.Dir) {
 	})
 }
 
+func (c *Copter) csrfHandler() http.Handler {
+	if c.csrf {
+		return nosurf.New(c)
+	}
+
+	return http.Handler(c)
+}
+
 func (c *Copter) Run(addr string) {
-	if err := http.ListenAndServe(addr, c); err != nil {
+	if err := http.ListenAndServe(addr, c.csrfHandler()); err != nil {
 		panic(err)
 	}
 }
 
 func (c *Copter) RunAndGracefulShutdown(addr string, timeout time.Duration) {
-	graceful.Run(addr, timeout, c)
+	graceful.Run(addr, timeout, c.csrfHandler())
 }
 
 func (c *Copter) RunTLS(addr string, cert string, key string) {
-	if err := http.ListenAndServeTLS(addr, cert, key, c); err != nil {
+	if err := http.ListenAndServeTLS(addr, cert, key, c.csrfHandler()); err != nil {
 		panic(err)
 	}
 }
@@ -103,7 +117,7 @@ func (c *Copter) RunTLS(addr string, cert string, key string) {
 func (c *Copter) RunTLSAndGracefulShutdown(addr string, cert string, key string, timeout time.Duration) {
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: c,
+		Handler: c.csrfHandler(),
 	}
 
 	if err := graceful.ListenAndServeTLS(srv, cert, key, timeout); err != nil {
