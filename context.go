@@ -18,12 +18,27 @@ type HTMLOptions struct {
 }
 
 type C struct {
-	Params   httprouter.Params
-	Request  *http.Request
-	Writer   http.ResponseWriter
-	render   *render.Render
-	index    int8
-	handlers []HandlerFunc
+	Params          httprouter.Params
+	Request         *http.Request
+	Writer          http.ResponseWriter
+	render          *render.Render
+	index           int8
+	handlers        []HandlerFunc
+	notfoundHandler HandlerFunc
+	panicHandler    HandlerFunc
+	errorHandler    HandlerFunc
+	//recovery
+	Recovery interface{}
+}
+
+func createContext(w http.ResponseWriter, r *http.Request, ps httprouter.Params, render *render.Render) *C {
+	return &C{
+		Params:  ps,
+		Request: r,
+		Writer:  w,
+		index:   -1,
+		render:  render,
+	}
 }
 
 func (c *C) header(status int, ct string) {
@@ -72,6 +87,14 @@ func (c *C) Redirect(url string) {
 func (c *C) Abort(status int) {
 	c.Writer.WriteHeader(status)
 	c.index = 127
+}
+
+func (c *C) Panic(err error) {
+	c.panicHandler(c)
+}
+
+func (c *C) NotFound() {
+	c.notfoundHandler(c)
 }
 
 func (c *C) Next() {

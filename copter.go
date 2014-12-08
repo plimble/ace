@@ -8,10 +8,15 @@ import (
 	"time"
 )
 
+var notFoundPath = "/404"
+var panicPath = "/500"
+
 type Copter struct {
-	httprouter *httprouter.Router
-	render     *render.Render
-	handlers   []HandlerFunc
+	httprouter      *httprouter.Router
+	render          *render.Render
+	handlers        []HandlerFunc
+	notfoundHandler HandlerFunc
+	panicHandler    HandlerFunc
 }
 
 type HandlerFunc func(c *C)
@@ -33,15 +38,10 @@ func Default() *Copter {
 func (c *Copter) handle(method, path string, handlers []HandlerFunc) {
 	handlers = c.combineHandlers(handlers)
 	c.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		context := &C{
-			Params:   params,
-			Request:  req,
-			Writer:   w,
-			render:   c.render,
-			index:    -1,
-			handlers: handlers,
-		}
-
+		context := createContext(w, req, params, c.render)
+		context.handlers = handlers
+		context.notfoundHandler = c.notfoundHandler
+		context.panicHandler = c.panicHandler
 		context.Next()
 	})
 }
@@ -50,6 +50,23 @@ type RenderOptions render.Options
 
 func (c *Copter) SetRenderOptions(options RenderOptions) {
 	c.render = render.New(render.Options(options))
+}
+
+func (c *Copter) NotFound(h HandlerFunc) {
+	c.notfoundHandler = h
+	c.httprouter.NotFound = func(w http.ResponseWriter, r *http.Request) {
+		context := createContext(w, r, httprouter.Params{}, c.render)
+		h(context)
+	}
+}
+
+func (c *Copter) Panic(h HandlerFunc) {
+	c.panicHandler = h
+	c.httprouter.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
+		context := createContext(w, r, httprouter.Params{}, c.render)
+		context.Recovery = rcv
+		h(context)
+	}
 }
 
 func (c *Copter) GET(path string, handlers ...HandlerFunc) {
