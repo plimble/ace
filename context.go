@@ -19,15 +19,15 @@ type HTMLOptions struct {
 }
 
 type C struct {
-	Params          httprouter.Params
-	Request         *http.Request
-	Writer          http.ResponseWriter
-	render          *render.Render
-	index           int8
-	handlers        []HandlerFunc
-	notfoundHandler HandlerFunc
-	panicHandler    HandlerFunc
-	errorHandler    HandlerFunc
+	Params              httprouter.Params
+	Request             *http.Request
+	Writer              http.ResponseWriter
+	render              *render.Render
+	index               int8
+	handlers            []HandlerFunc
+	notfoundHandlerFunc HandlerFunc
+	panicHandlerFunc    HandlerFunc
+	errorHandler        HandlerFunc
 	//recovery
 	Recovery interface{}
 }
@@ -91,11 +91,11 @@ func (c *C) Abort(status int) {
 }
 
 func (c *C) Panic(err error) {
-	c.panicHandler(c)
+	c.panicHandlerFunc(c)
 }
 
 func (c *C) NotFound() {
-	c.notfoundHandler(c)
+	c.notfoundHandlerFunc(c)
 }
 
 func (c *C) CSRFToken() string {
