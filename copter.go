@@ -25,10 +25,10 @@ type HandlerFunc func(c *C)
 type RenderOptions render.Options
 
 func New() *Copter {
-	return &Copter{
-		httprouter: httprouter.New(),
-		render:     render.New(render.Options{}),
-	}
+	c := &Copter{}
+	c.httprouter = httprouter.New()
+	c.render = render.New(render.Options{})
+	return c
 }
 
 func Default() *Copter {
