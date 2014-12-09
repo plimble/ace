@@ -35,19 +35,32 @@ func (c *Copter) OPTIONS(path string, handlers ...HandlerFunc) {
 
 func (c *Copter) NotFound(h HandlerFunc) {
 	c.notfoundHandlerFunc = h
+	handlers := c.combineHandlers([]HandlerFunc{h})
 	c.httprouter.NotFound = func(w http.ResponseWriter, r *http.Request) {
-		context := createContext(w, r, httprouter.Params{}, c.render)
-		h(context)
+		context := c.CreateContext(w, r)
+		context.handlers = handlers
+		context.Next()
 	}
 }
 
 func (c *Copter) Panic(h HandlerFunc) {
 	c.panicHandlerFunc = h
+	handlers := c.combineHandlers([]HandlerFunc{h})
 	c.httprouter.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
-		context := createContext(w, r, httprouter.Params{}, c.render)
+		context := c.CreateContext(w, r)
 		context.Recovery = rcv
-		h(context)
+		context.handlers = handlers
+		context.Next()
 	}
+}
+
+func (c *Copter) Handler(h HandlerFunc) http.Handler {
+	handlers := c.combineHandlers([]HandlerFunc{h})
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		context := c.CreateContext(w, r)
+		context.handlers = handlers
+		context.Next()
+	})
 }
 
 func (c *Copter) Static(path string, root http.Dir) {
@@ -57,21 +70,22 @@ func (c *Copter) Static(path string, root http.Dir) {
 	})
 }
 
+func (c *Copter) handle(method, path string, handlers []HandlerFunc) {
+	handlers = c.combineHandlers(handlers)
+	c.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
+		context := c.CreateContext(w, req)
+		context.Params = params
+		context.handlers = handlers
+		context.notfoundHandlerFunc = c.notfoundHandlerFunc
+		context.panicHandlerFunc = c.panicHandlerFunc
+		context.Next()
+	})
+}
+
 func (c *Copter) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
 	s := len(c.handlers) + len(handlers)
 	h := make([]HandlerFunc, 0, s)
 	h = append(h, c.handlers...)
 	h = append(h, handlers...)
 	return h
-}
-
-func (c *Copter) handle(method, path string, handlers []HandlerFunc) {
-	handlers = c.combineHandlers(handlers)
-	c.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		context := createContext(w, req, params, c.render)
-		context.handlers = handlers
-		context.notfoundHandlerFunc = c.notfoundHandlerFunc
-		context.panicHandlerFunc = c.panicHandlerFunc
-		context.Next()
-	})
 }

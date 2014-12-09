@@ -30,14 +30,11 @@ type C struct {
 	Recovery interface{}
 }
 
-func createContext(w http.ResponseWriter, r *http.Request, ps httprouter.Params, render *render.Render) *C {
-	return &C{
-		Params:  ps,
-		Request: r,
-		Writer:  w,
-		index:   -1,
-		render:  render,
-	}
+func (c *Copter) CreateContext(w http.ResponseWriter, r *http.Request) *C {
+	context := c.pool.Get().(*C)
+	context.Request = r
+	context.Writer = w
+	return context
 }
 
 func (c *C) header(status int, ct string) {
