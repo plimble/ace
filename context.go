@@ -85,7 +85,7 @@ func (c *C) Abort(status int) {
 	c.index = 127
 }
 
-func (c *C) Panic(err error) {
+func (c *C) Panic() {
 	c.panicHandlerFunc(c)
 }
 
