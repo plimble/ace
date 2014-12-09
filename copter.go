@@ -12,7 +12,7 @@ type Copter struct {
 	render              *render.Render
 	handlers            []HandlerFunc
 	notfoundHandlerFunc HandlerFunc
-	panicHandlerFunc    HandlerFunc
+	failHandlerFunc     HandlerFunc
 	pool                sync.Pool
 }
 

@@ -2,8 +2,10 @@ package copter
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/julienschmidt/httprouter"
 	"gopkg.in/unrolled/render.v1"
+	"math"
 	"net/http"
 	"strings"
 )
@@ -11,6 +13,16 @@ import (
 const (
 	ContentType    = "Content-Type"
 	AcceptLanguage = "Accept-Language"
+)
+
+const (
+	AbortIndex   = math.MaxInt8 / 2
+	MIMEJSON     = "application/json"
+	MIMEHTML     = "text/html"
+	MIMEXML      = "application/xml"
+	MIMEXML2     = "text/xml"
+	MIMEPlain    = "text/plain"
+	MIMEPOSTForm = "application/x-www-form-urlencoded"
 )
 
 type HTMLOptions struct {
@@ -25,7 +37,7 @@ type C struct {
 	index               int8
 	handlers            []HandlerFunc
 	notfoundHandlerFunc HandlerFunc
-	panicHandlerFunc    HandlerFunc
+	failHandlerFunc     HandlerFunc
 	//recovery
 	Recovery interface{}
 }
@@ -82,15 +94,15 @@ func (c *C) Redirect(url string) {
 
 func (c *C) Abort(status int) {
 	c.Writer.WriteHeader(status)
-	c.index = 127
-}
-
-func (c *C) Panic() {
-	c.panicHandlerFunc(c)
+	c.index = AbortIndex
 }
 
 func (c *C) NotFound() {
 	c.notfoundHandlerFunc(c)
+}
+
+func (c *C) Fail() {
+	c.failHandlerFunc(c)
 }
 
 func (c *C) Next() {
@@ -110,4 +122,29 @@ func (c *C) ClientIP() string {
 		clientIP = c.Request.RemoteAddr
 	}
 	return clientIP
+}
+
+func (c *C) Bind(obj interface{}) bool {
+	var b binding.Binding
+	ctype := c.Request.Header.Get("Content-Type")
+	switch {
+	case c.Request.Method == "GET" || ctype == MIMEPOSTForm:
+		b = binding.Form
+	case ctype == MIMEJSON:
+		b = binding.JSON
+	case ctype == MIMEXML || ctype == MIMEXML2:
+		b = binding.XML
+	default:
+		c.String(400, "unknown content-type: "+ctype)
+		return false
+	}
+	return c.BindWith(obj, b)
+}
+
+func (c *C) BindWith(obj interface{}, b binding.Binding) bool {
+	if err := b.Bind(c.Request, obj); err != nil {
+		c.String(400, err.Error())
+		return false
+	}
+	return true
 }

@@ -43,8 +43,8 @@ func (c *Copter) NotFound(h HandlerFunc) {
 	}
 }
 
-func (c *Copter) Panic(h HandlerFunc) {
-	c.panicHandlerFunc = h
+func (c *Copter) Fail(h HandlerFunc) {
+	c.failHandlerFunc = h
 	handlers := c.combineHandlers([]HandlerFunc{h})
 	c.httprouter.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
 		context := c.CreateContext(w, r)
@@ -77,7 +77,7 @@ func (c *Copter) handle(method, path string, handlers []HandlerFunc) {
 		context.Params = params
 		context.handlers = handlers
 		context.notfoundHandlerFunc = c.notfoundHandlerFunc
-		context.panicHandlerFunc = c.panicHandlerFunc
+		context.failHandlerFunc = c.failHandlerFunc
 		context.Next()
 	})
 }
