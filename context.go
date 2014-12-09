@@ -30,9 +30,10 @@ type HTMLOptions struct {
 }
 
 type C struct {
+	writercache         responseWriter
 	Params              httprouter.Params
 	Request             *http.Request
-	Writer              http.ResponseWriter
+	Writer              ResponseWriter
 	render              *render.Render
 	index               int8
 	handlers            []HandlerFunc
@@ -44,8 +45,10 @@ type C struct {
 
 func (c *Copter) CreateContext(w http.ResponseWriter, r *http.Request) *C {
 	context := c.pool.Get().(*C)
+	context.writercache.reset(w)
+	context.Writer = &context.writercache
 	context.Request = r
-	context.Writer = w
+
 	return context
 }
 

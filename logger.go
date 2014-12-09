@@ -2,7 +2,9 @@ package copter
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"time"
 )
 
 type logger struct {
@@ -14,8 +16,11 @@ func Logger() HandlerFunc {
 	l := &logger{log.New(os.Stdout, "[copter] ", 0)}
 
 	return func(c *C) {
+		start := time.Now()
 		l.Printf("Started %s %s", c.Request.Method, c.Request.URL.Path)
 
 		c.Next()
+
+		l.Printf("Completed %v %s in %v", c.Writer.Status(), http.StatusText(c.Writer.Status()), time.Since(start))
 	}
 }

@@ -23,7 +23,10 @@ func New() *Copter {
 	c := &Copter{}
 	c.httprouter = httprouter.New()
 	c.pool.New = func() interface{} {
-		context := &C{render: render.New(render.Options{}), index: -1}
+		context := &C{}
+		context.index = -1
+		context.render = render.New(render.Options{})
+		context.Writer = &context.writercache
 		return context
 	}
 	return c
