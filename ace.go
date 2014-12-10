@@ -1,4 +1,4 @@
-package copter
+package ace
 
 import (
 	"github.com/julienschmidt/httprouter"
@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-type Copter struct {
+type Ace struct {
 	httprouter          *httprouter.Router
 	render              *render.Render
 	handlers            []HandlerFunc
@@ -19,8 +19,8 @@ type Copter struct {
 type HandlerFunc func(c *C)
 type RenderOptions render.Options
 
-func New() *Copter {
-	c := &Copter{}
+func New() *Ace {
+	c := &Ace{}
 	c.httprouter = httprouter.New()
 	c.pool.New = func() interface{} {
 		context := &C{}
@@ -32,38 +32,38 @@ func New() *Copter {
 	return c
 }
 
-func Default() *Copter {
-	c := New()
-	c.Use(Recovery())
-	c.Use(Logger())
-	return c
+func Default() *Ace {
+	a := New()
+	a.Use(Recovery())
+	a.Use(Logger())
+	return a
 }
 
-func (c *Copter) SetRenderOptions(options RenderOptions) {
-	c.pool.New = func() interface{} {
+func (a *Ace) SetRenderOptions(options RenderOptions) {
+	a.pool.New = func() interface{} {
 		context := &C{render: render.New(render.Options(options)), index: -1}
 		return context
 	}
 }
 
-func (c *Copter) Run(addr string) {
-	if err := http.ListenAndServe(addr, c); err != nil {
+func (a *Ace) Run(addr string) {
+	if err := http.ListenAndServe(addr, a); err != nil {
 		panic(err)
 	}
 }
 
-func (c *Copter) RunTLS(addr string, cert string, key string) {
-	if err := http.ListenAndServeTLS(addr, cert, key, c); err != nil {
+func (a *Ace) RunTLS(addr string, cert string, key string) {
+	if err := http.ListenAndServeTLS(addr, cert, key, a); err != nil {
 		panic(err)
 	}
 }
 
-func (c *Copter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	c.httprouter.ServeHTTP(w, req)
+func (a *Ace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	a.httprouter.ServeHTTP(w, req)
 }
 
-func (c *Copter) Use(middlewares ...HandlerFunc) {
+func (a *Ace) Use(middlewares ...HandlerFunc) {
 	for _, handler := range middlewares {
-		c.handlers = append(c.handlers, handler)
+		a.handlers = append(a.handlers, handler)
 	}
 }

@@ -1,4 +1,4 @@
-package copter
+package ace
 
 import (
 	"log"
@@ -13,7 +13,7 @@ type logger struct {
 
 // NewLogger returns a new Logger instance
 func Logger() HandlerFunc {
-	l := &logger{log.New(os.Stdout, "[copter] ", 0)}
+	l := &logger{log.New(os.Stdout, "[ace] ", 0)}
 
 	return func(c *C) {
 		start := time.Now()

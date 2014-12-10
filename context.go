@@ -1,4 +1,4 @@
-package copter
+package ace
 
 import (
 	"fmt"
@@ -43,8 +43,8 @@ type C struct {
 	Recovery interface{}
 }
 
-func (c *Copter) CreateContext(w http.ResponseWriter, r *http.Request) *C {
-	context := c.pool.Get().(*C)
+func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
+	context := a.pool.Get().(*C)
 	context.writercache.reset(w)
 	context.Writer = &context.writercache
 	context.Request = r
