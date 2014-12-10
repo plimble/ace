@@ -41,6 +41,7 @@ type C struct {
 	failHandlerFunc     HandlerFunc
 	//recovery
 	Recovery interface{}
+	context  map[string]interface{}
 }
 
 func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
@@ -48,6 +49,7 @@ func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
 	context.writercache.reset(w)
 	context.Writer = &context.writercache
 	context.Request = r
+	context.context = make(map[string]interface{})
 
 	return context
 }
@@ -150,4 +152,12 @@ func (c *C) BindWith(obj interface{}, b binding.Binding) bool {
 		return false
 	}
 	return true
+}
+
+func (c *C) Set(key string, v interface{}) {
+	c.context[key] = v
+}
+
+func (c *C) Get(key string) interface{} {
+	return c.context[key]
 }
