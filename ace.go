@@ -2,14 +2,12 @@ package ace
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"gopkg.in/unrolled/render.v1"
 	"net/http"
 	"sync"
 )
 
 type Ace struct {
 	httprouter          *httprouter.Router
-	render              *render.Render
 	handlers            []HandlerFunc
 	notfoundHandlerFunc HandlerFunc
 	failHandlerFunc     HandlerFunc
@@ -17,7 +15,6 @@ type Ace struct {
 }
 
 type HandlerFunc func(c *C)
-type RenderOptions render.Options
 
 func New() *Ace {
 	c := &Ace{}
@@ -25,7 +22,6 @@ func New() *Ace {
 	c.pool.New = func() interface{} {
 		context := &C{}
 		context.index = -1
-		context.render = render.New(render.Options{})
 		context.Writer = &context.writercache
 		return context
 	}
@@ -37,13 +33,6 @@ func Default() *Ace {
 	a.Use(Recovery())
 	a.Use(Logger())
 	return a
-}
-
-func (a *Ace) SetRenderOptions(options RenderOptions) {
-	a.pool.New = func() interface{} {
-		context := &C{render: render.New(render.Options(options)), index: -1}
-		return context
-	}
 }
 
 func (a *Ace) Run(addr string) {

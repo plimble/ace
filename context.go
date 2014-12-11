@@ -1,10 +1,10 @@
 package ace
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/gorilla/schema"
 	"github.com/julienschmidt/httprouter"
-	"gopkg.in/unrolled/render.v1"
 	"math"
 	"net/http"
 	"strings"
@@ -16,13 +16,7 @@ const (
 )
 
 const (
-	AbortIndex   = math.MaxInt8 / 2
-	MIMEJSON     = "application/json"
-	MIMEHTML     = "text/html"
-	MIMEXML      = "application/xml"
-	MIMEXML2     = "text/xml"
-	MIMEPlain    = "text/plain"
-	MIMEPOSTForm = "application/x-www-form-urlencoded"
+	AbortIndex = math.MaxInt8 / 2
 )
 
 type HTMLOptions struct {
@@ -34,7 +28,6 @@ type C struct {
 	Params              httprouter.Params
 	Request             *http.Request
 	Writer              ResponseWriter
-	render              *render.Render
 	index               int8
 	handlers            []HandlerFunc
 	notfoundHandlerFunc HandlerFunc
@@ -54,38 +47,53 @@ func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
 	return context
 }
 
-func (c *C) header(status int, ct string) {
-	c.Writer.Header().Set(ContentType, "application/json")
-	c.Writer.WriteHeader(status)
-}
-
 func (c *C) JSON(status int, v interface{}) {
-	c.render.JSON(c.Writer, status, v)
-}
-
-func (c *C) HTML(status int, name string, binding interface{}, htmlOpt ...HTMLOptions) {
-	if len(htmlOpt) == 0 {
-		c.render.HTML(c.Writer, status, name, binding)
-	} else {
-		c.render.HTML(c.Writer, status, name, binding, render.HTMLOptions(htmlOpt[0]))
+	result, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
 	}
-}
 
-func (c *C) XML(status int, v interface{}) {
-	c.render.XML(c.Writer, status, v)
-}
-
-func (c *C) Data(status int, v []byte) {
-	c.render.Data(c.Writer, status, v)
+	c.Writer.WriteHeader(status)
+	c.Writer.Header().Set(ContentType, "application/json; charset=UTF-8")
+	c.Writer.Write(result)
 }
 
 func (c *C) String(status int, format string, val ...interface{}) {
-	c.header(status, "text/plain")
+	c.Writer.WriteHeader(status)
+	c.Writer.Header().Set(ContentType, "text/html; charset=UTF-8")
 	if len(val) == 0 {
 		c.Writer.Write([]byte(format))
 	} else {
 		c.Writer.Write([]byte(fmt.Sprintf(format, val...)))
 	}
+}
+
+func (c *C) Data(status int, v []byte) {
+	c.Writer.WriteHeader(status)
+	c.Writer.Header().Set(ContentType, "application/octet-stream; charset=UTF-8")
+	c.Writer.Write(v)
+}
+
+func (c *C) ParseJSON(v interface{}) error {
+	return json.NewDecoder(c.Request.Body).Decode(v)
+}
+
+func (c *C) ParseForm(v interface{}) error {
+	if err := c.Request.ParseForm(); err != nil {
+		return err
+	}
+
+	decoder := schema.NewDecoder()
+	return decoder.Decode(v, c.Request.PostForm)
+}
+
+func (c *C) ParseMultipartForm(v interface{}, maxMemory int64) error {
+	if err := c.Request.ParseMultipartForm(maxMemory); err != nil {
+		return err
+	}
+
+	decoder := schema.NewDecoder()
+	return decoder.Decode(v, c.Request.PostForm)
 }
 
 func (c *C) HTTPLang() string {
@@ -127,31 +135,6 @@ func (c *C) ClientIP() string {
 		clientIP = c.Request.RemoteAddr
 	}
 	return clientIP
-}
-
-func (c *C) Bind(obj interface{}) bool {
-	var b binding.Binding
-	ctype := c.Request.Header.Get("Content-Type")
-	switch {
-	case c.Request.Method == "GET" || ctype == MIMEPOSTForm:
-		b = binding.Form
-	case ctype == MIMEJSON:
-		b = binding.JSON
-	case ctype == MIMEXML || ctype == MIMEXML2:
-		b = binding.XML
-	default:
-		c.String(400, "unknown content-type: "+ctype)
-		return false
-	}
-	return c.BindWith(obj, b)
-}
-
-func (c *C) BindWith(obj interface{}, b binding.Binding) bool {
-	if err := b.Bind(c.Request, obj); err != nil {
-		c.String(400, err.Error())
-		return false
-	}
-	return true
 }
 
 func (c *C) Set(key string, v interface{}) {

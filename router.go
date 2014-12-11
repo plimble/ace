@@ -83,9 +83,12 @@ func (a *Ace) handle(method, path string, handlers []HandlerFunc) {
 }
 
 func (a *Ace) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
-	s := len(a.handlers) + len(handlers)
-	h := make([]HandlerFunc, 0, s)
-	h = append(h, a.handlers...)
-	h = append(h, handlers...)
+	aLen := len(a.handlers)
+	hLen := len(handlers)
+	h := make([]HandlerFunc, aLen+hLen)
+	copy(h, a.handlers)
+	for i := 0; i < hLen; i++ {
+		h[aLen+i] = handlers[i]
+	}
 	return h
 }
