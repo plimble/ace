@@ -72,7 +72,7 @@ func (a *Ace) Static(path string, root http.Dir) {
 	})
 }
 
-func (a *Ace) handle(method, path string, handlers []HandlerFunc) {
+func (a *Ace) Handle(method, path string, handlers []HandlerFunc) {
 	handlers = a.combineHandlers(handlers)
 	a.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		c := a.CreateContext(w, req)
