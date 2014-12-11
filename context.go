@@ -96,6 +96,11 @@ func (c *C) ParseMultipartForm(v interface{}, maxMemory int64) error {
 	return decoder.Decode(v, c.Request.PostForm)
 }
 
+func (c *C) ParseQuery(v interface{}) error {
+	decoder := schema.NewDecoder()
+	return decoder.Decode(v, c.Request.URL.Query())
+}
+
 func (c *C) HTTPLang() string {
 	langStr := c.Request.Header.Get(AcceptLanguage)
 	return strings.Split(langStr, ",")[0]
