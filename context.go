@@ -17,27 +17,27 @@ const (
 )
 
 type C struct {
-	writercache         responseWriter
-	Params              httprouter.Params
-	Request             *http.Request
-	Writer              ResponseWriter
-	index               int8
-	handlers            []HandlerFunc
-	notfoundHandlerFunc HandlerFunc
-	failHandlerFunc     HandlerFunc
+	writercache      responseWriter
+	Params           httprouter.Params
+	Request          *http.Request
+	Writer           ResponseWriter
+	index            int8
+	handlers         []HandlerFunc
+	errorHandlerFunc ErrorHandlerFunc
 	//recovery
 	Recovery interface{}
 	context  map[string]interface{}
+	err      error
 }
 
 func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
-	context := a.pool.Get().(*C)
-	context.writercache.reset(w)
-	context.Writer = &context.writercache
-	context.Request = r
-	context.context = make(map[string]interface{})
+	c := a.pool.Get().(*C)
+	c.writercache.reset(w)
+	c.Writer = &c.writercache
+	c.Request = r
+	c.context = make(map[string]interface{})
 
-	return context
+	return c
 }
 
 func (c *C) JSON(status int, v interface{}) {
@@ -108,12 +108,14 @@ func (c *C) Abort(status int) {
 	c.index = AbortIndex
 }
 
-func (c *C) NotFound() {
-	c.notfoundHandlerFunc(c)
+func (c *C) Error(err error) {
+	c.err = err
+	c.errorHandlerFunc(c, err)
+	c.index = AbortIndex
 }
 
-func (c *C) Fail() {
-	c.failHandlerFunc(c)
+func (c *C) GetError() error {
+	return c.err
 }
 
 func (c *C) Next() {

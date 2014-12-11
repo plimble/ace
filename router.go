@@ -33,33 +33,35 @@ func (a *Ace) OPTIONS(path string, handlers ...HandlerFunc) {
 	a.handle("OPTIONS", path, handlers)
 }
 
-func (a *Ace) NotFound(h HandlerFunc) {
-	a.notfoundHandlerFunc = h
+func (a *Ace) RouteNotFound(h HandlerFunc) {
 	handlers := a.combineHandlers([]HandlerFunc{h})
 	a.httprouter.NotFound = func(w http.ResponseWriter, r *http.Request) {
-		context := a.CreateContext(w, r)
-		context.handlers = handlers
-		context.Next()
+		c := a.CreateContext(w, r)
+		c.handlers = handlers
+		c.Next()
 	}
 }
 
-func (a *Ace) Fail(h HandlerFunc) {
-	a.failHandlerFunc = h
+func (a *Ace) Error(h ErrorHandlerFunc) {
+	a.errorHandlerFunc = h
+}
+
+func (a *Ace) Panic(h HandlerFunc) {
 	handlers := a.combineHandlers([]HandlerFunc{h})
 	a.httprouter.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
-		context := a.CreateContext(w, r)
-		context.Recovery = rcv
-		context.handlers = handlers
-		context.Next()
+		c := a.CreateContext(w, r)
+		c.Recovery = rcv
+		c.handlers = handlers
+		c.Next()
 	}
 }
 
 func (a *Ace) Handler(h HandlerFunc) http.Handler {
 	handlers := a.combineHandlers([]HandlerFunc{h})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		context := a.CreateContext(w, r)
-		context.handlers = handlers
-		context.Next()
+		c := a.CreateContext(w, r)
+		c.handlers = handlers
+		c.Next()
 	})
 }
 
@@ -73,12 +75,11 @@ func (a *Ace) Static(path string, root http.Dir) {
 func (a *Ace) handle(method, path string, handlers []HandlerFunc) {
 	handlers = a.combineHandlers(handlers)
 	a.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		context := a.CreateContext(w, req)
-		context.Params = params
-		context.handlers = handlers
-		context.notfoundHandlerFunc = a.notfoundHandlerFunc
-		context.failHandlerFunc = a.failHandlerFunc
-		context.Next()
+		c := a.CreateContext(w, req)
+		c.Params = params
+		c.handlers = handlers
+		c.errorHandlerFunc = a.errorHandlerFunc
+		c.Next()
 	})
 }
 

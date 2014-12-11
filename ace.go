@@ -7,25 +7,25 @@ import (
 )
 
 type Ace struct {
-	httprouter          *httprouter.Router
-	handlers            []HandlerFunc
-	notfoundHandlerFunc HandlerFunc
-	failHandlerFunc     HandlerFunc
-	pool                sync.Pool
+	httprouter       *httprouter.Router
+	handlers         []HandlerFunc
+	errorHandlerFunc ErrorHandlerFunc
+	pool             sync.Pool
 }
 
 type HandlerFunc func(c *C)
+type ErrorHandlerFunc func(c *C, err error)
 
 func New() *Ace {
-	c := &Ace{}
-	c.httprouter = httprouter.New()
-	c.pool.New = func() interface{} {
-		context := &C{}
-		context.index = -1
-		context.Writer = &context.writercache
-		return context
+	a := &Ace{}
+	a.httprouter = httprouter.New()
+	a.pool.New = func() interface{} {
+		c := &C{}
+		c.index = -1
+		c.Writer = &c.writercache
+		return c
 	}
-	return c
+	return a
 }
 
 func Default() *Ace {
