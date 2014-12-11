@@ -13,15 +13,8 @@ import (
 const (
 	ContentType    = "Content-Type"
 	AcceptLanguage = "Accept-Language"
+	AbortIndex     = math.MaxInt8 / 2
 )
-
-const (
-	AbortIndex = math.MaxInt8 / 2
-)
-
-type HTMLOptions struct {
-	Layout string
-}
 
 type C struct {
 	writercache         responseWriter
