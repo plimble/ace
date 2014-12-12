@@ -6,31 +6,31 @@ import (
 )
 
 func (a *Ace) GET(path string, handlers ...HandlerFunc) {
-	a.handle("GET", path, handlers)
+	a.Handle("GET", path, handlers)
 }
 
 func (a *Ace) POST(path string, handlers ...HandlerFunc) {
-	a.handle("POST", path, handlers)
+	a.Handle("POST", path, handlers)
 }
 
 func (a *Ace) PATCH(path string, handlers ...HandlerFunc) {
-	a.handle("PATCH", path, handlers)
+	a.Handle("PATCH", path, handlers)
 }
 
 func (a *Ace) PUT(path string, handlers ...HandlerFunc) {
-	a.handle("PUT", path, handlers)
+	a.Handle("PUT", path, handlers)
 }
 
 func (a *Ace) DELETE(path string, handlers ...HandlerFunc) {
-	a.handle("DELETE", path, handlers)
+	a.Handle("DELETE", path, handlers)
 }
 
 func (a *Ace) HEAD(path string, handlers ...HandlerFunc) {
-	a.handle("HEAD", path, handlers)
+	a.Handle("HEAD", path, handlers)
 }
 
 func (a *Ace) OPTIONS(path string, handlers ...HandlerFunc) {
-	a.handle("OPTIONS", path, handlers)
+	a.Handle("OPTIONS", path, handlers)
 }
 
 func (a *Ace) RouteNotFound(h HandlerFunc) {
@@ -39,6 +39,7 @@ func (a *Ace) RouteNotFound(h HandlerFunc) {
 		c := a.CreateContext(w, r)
 		c.handlers = handlers
 		c.Next()
+		a.pool.Put(c)
 	}
 }
 
@@ -50,9 +51,9 @@ func (a *Ace) Panic(h HandlerFunc) {
 	handlers := a.combineHandlers([]HandlerFunc{h})
 	a.httprouter.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
 		c := a.CreateContext(w, r)
-		c.Recovery = rcv
 		c.handlers = handlers
 		c.Next()
+		a.pool.Put(c)
 	}
 }
 
@@ -62,6 +63,7 @@ func (a *Ace) Handler(h HandlerFunc) http.Handler {
 		c := a.CreateContext(w, r)
 		c.handlers = handlers
 		c.Next()
+		a.pool.Put(c)
 	})
 }
 
@@ -80,16 +82,22 @@ func (a *Ace) Handle(method, path string, handlers []HandlerFunc) {
 		c.handlers = handlers
 		c.errorHandlerFunc = a.errorHandlerFunc
 		c.Next()
+		a.pool.Put(c)
 	})
 }
 
 func (a *Ace) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
-	aLen := len(a.handlers)
-	hLen := len(handlers)
-	h := make([]HandlerFunc, aLen+hLen)
-	copy(h, a.handlers)
-	for i := 0; i < hLen; i++ {
-		h[aLen+i] = handlers[i]
-	}
-	return h
+	finalSize := len(a.handlers) + len(handlers)
+	mergedHandlers := make([]HandlerFunc, 0, finalSize)
+	mergedHandlers = append(mergedHandlers, a.handlers...)
+	return append(mergedHandlers, handlers...)
+
+	// aLen := len(a.handlers)
+	// hLen := len(handlers)
+	// h := make([]HandlerFunc, aLen+hLen)
+	// copy(h, a.handlers)
+	// for i := 0; i < hLen; i++ {
+	// 	h[aLen+i] = handlers[i]
+	// }
+	// return h
 }

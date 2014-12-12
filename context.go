@@ -25,17 +25,16 @@ type C struct {
 	handlers         []HandlerFunc
 	errorHandlerFunc ErrorHandlerFunc
 	//recovery
-	Recovery interface{}
-	context  map[string]interface{}
-	err      error
+	context map[string]interface{}
+	err     error
 }
 
 func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
 	c := a.pool.Get().(*C)
 	c.writercache.reset(w)
-	c.Writer = &c.writercache
 	c.Request = r
-	c.context = make(map[string]interface{})
+	c.context = nil
+	c.index = -1
 
 	return c
 }
@@ -138,6 +137,9 @@ func (c *C) ClientIP() string {
 }
 
 func (c *C) Set(key string, v interface{}) {
+	if c.context == nil {
+		c.context = make(map[string]interface{})
+	}
 	c.context[key] = v
 }
 
