@@ -76,7 +76,7 @@ func (c *C) ParseForm(v interface{}) error {
 	}
 
 	decoder := schema.NewDecoder()
-	return decoder.Decode(v, c.Request.PostForm)
+	return decoder.Decode(v, c.Request.Form)
 }
 
 func (c *C) ParseMultipartForm(v interface{}, maxMemory int64) error {
@@ -85,7 +85,7 @@ func (c *C) ParseMultipartForm(v interface{}, maxMemory int64) error {
 	}
 
 	decoder := schema.NewDecoder()
-	return decoder.Decode(v, c.Request.PostForm)
+	return decoder.Decode(v, c.Request.Form)
 }
 
 func (c *C) ParseQuery(v interface{}) error {

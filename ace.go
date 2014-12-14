@@ -7,10 +7,9 @@ import (
 )
 
 type Ace struct {
-	httprouter       *httprouter.Router
-	handlers         []HandlerFunc
-	errorHandlerFunc ErrorHandlerFunc
-	pool             sync.Pool
+	*Router
+	httprouter *httprouter.Router
+	pool       sync.Pool
 }
 
 type HandlerFunc func(c *C)
@@ -18,6 +17,11 @@ type ErrorHandlerFunc func(c *C, err error)
 
 func New() *Ace {
 	a := &Ace{}
+	a.Router = &Router{
+		handlers: nil,
+		prefix:   "/",
+		ace:      a,
+	}
 	a.httprouter = httprouter.New()
 	a.pool.New = func() interface{} {
 		c := &C{}
@@ -49,10 +53,4 @@ func (a *Ace) RunTLS(addr string, cert string, key string) {
 
 func (a *Ace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	a.httprouter.ServeHTTP(w, req)
-}
-
-func (a *Ace) Use(middlewares ...HandlerFunc) {
-	for _, handler := range middlewares {
-		a.handlers = append(a.handlers, handler)
-	}
 }

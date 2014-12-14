@@ -5,94 +5,119 @@ import (
 	"net/http"
 )
 
-func (a *Ace) GET(path string, handlers ...HandlerFunc) {
-	a.Handle("GET", path, handlers)
+type Router struct {
+	handlers []HandlerFunc
+	prefix   string
+	ace      *Ace
 }
 
-func (a *Ace) POST(path string, handlers ...HandlerFunc) {
-	a.Handle("POST", path, handlers)
-}
-
-func (a *Ace) PATCH(path string, handlers ...HandlerFunc) {
-	a.Handle("PATCH", path, handlers)
-}
-
-func (a *Ace) PUT(path string, handlers ...HandlerFunc) {
-	a.Handle("PUT", path, handlers)
-}
-
-func (a *Ace) DELETE(path string, handlers ...HandlerFunc) {
-	a.Handle("DELETE", path, handlers)
-}
-
-func (a *Ace) HEAD(path string, handlers ...HandlerFunc) {
-	a.Handle("HEAD", path, handlers)
-}
-
-func (a *Ace) OPTIONS(path string, handlers ...HandlerFunc) {
-	a.Handle("OPTIONS", path, handlers)
-}
-
-func (a *Ace) RouteNotFound(h HandlerFunc) {
-	handlers := a.combineHandlers([]HandlerFunc{h})
-	a.httprouter.NotFound = func(w http.ResponseWriter, r *http.Request) {
-		c := a.CreateContext(w, r)
-		c.handlers = handlers
-		c.Next()
-		a.pool.Put(c)
+func (r *Router) Use(middlewares ...HandlerFunc) {
+	for _, handler := range middlewares {
+		r.handlers = append(r.handlers, handler)
 	}
 }
 
-func (a *Ace) Error(h ErrorHandlerFunc) {
-	a.errorHandlerFunc = h
+func (r *Router) GET(path string, handlers ...HandlerFunc) {
+	r.Handle("GET", path, handlers)
 }
 
-func (a *Ace) Panic(h HandlerFunc) {
-	handlers := a.combineHandlers([]HandlerFunc{h})
-	a.httprouter.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
-		c := a.CreateContext(w, r)
-		c.handlers = handlers
-		c.Next()
-		a.pool.Put(c)
+func (r *Router) POST(path string, handlers ...HandlerFunc) {
+	r.Handle("POST", path, handlers)
+}
+
+func (r *Router) PATCH(path string, handlers ...HandlerFunc) {
+	r.Handle("PATCH", path, handlers)
+}
+
+func (r *Router) PUT(path string, handlers ...HandlerFunc) {
+	r.Handle("PUT", path, handlers)
+}
+
+func (r *Router) DELETE(path string, handlers ...HandlerFunc) {
+	r.Handle("DELETE", path, handlers)
+}
+
+func (r *Router) HEAD(path string, handlers ...HandlerFunc) {
+	r.Handle("HEAD", path, handlers)
+}
+
+func (r *Router) OPTIONS(path string, handlers ...HandlerFunc) {
+	r.Handle("OPTIONS", path, handlers)
+}
+
+func (r *Router) Group(path string, handlers ...HandlerFunc) *Router {
+	handlers = r.combineHandlers(handlers)
+	return &Router{
+		handlers: handlers,
+		prefix:   path,
+		ace:      r.ace,
 	}
 }
 
-func (a *Ace) Handler(h HandlerFunc) http.Handler {
-	handlers := a.combineHandlers([]HandlerFunc{h})
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c := a.CreateContext(w, r)
+func (r *Router) RouteNotFound(h HandlerFunc) {
+	handlers := r.combineHandlers([]HandlerFunc{h})
+	r.ace.httprouter.NotFound = func(w http.ResponseWriter, req *http.Request) {
+		c := r.ace.CreateContext(w, req)
 		c.handlers = handlers
 		c.Next()
-		a.pool.Put(c)
+		r.ace.pool.Put(c)
+	}
+}
+
+func (r *Router) Panic(h HandlerFunc) {
+	handlers := r.combineHandlers([]HandlerFunc{h})
+	r.ace.httprouter.PanicHandler = func(w http.ResponseWriter, req *http.Request, rcv interface{}) {
+		c := r.ace.CreateContext(w, req)
+		c.handlers = handlers
+		c.Next()
+		r.ace.pool.Put(c)
+	}
+}
+
+func (r *Router) Handler(h HandlerFunc) http.Handler {
+	handlers := r.combineHandlers([]HandlerFunc{h})
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		c := r.ace.CreateContext(w, req)
+		c.handlers = handlers
+		c.Next()
+		r.ace.pool.Put(c)
 	})
 }
 
-func (a *Ace) Static(path string, root http.Dir) {
+func (r *Router) Static(path string, root http.Dir) {
+	path = r.path(path)
 	fileServer := http.StripPrefix(path, http.FileServer(root))
-	a.GET(path+"/*filepath", func(c *C) {
+	r.GET(path+"/*filepath", func(c *C) {
 		fileServer.ServeHTTP(c.Writer, c.Request)
 	})
 }
 
-func (a *Ace) Handle(method, path string, handlers []HandlerFunc) {
-	handlers = a.combineHandlers(handlers)
-	a.httprouter.Handle(method, path, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		c := a.CreateContext(w, req)
+func (r *Router) Handle(method, path string, handlers []HandlerFunc) {
+	handlers = r.combineHandlers(handlers)
+	r.ace.httprouter.Handle(method, r.path(path), func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
+		c := r.ace.CreateContext(w, req)
 		c.Params = params
 		c.handlers = handlers
-		c.errorHandlerFunc = a.errorHandlerFunc
 		c.Next()
-		a.pool.Put(c)
+		r.ace.pool.Put(c)
 	})
 }
 
-func (a *Ace) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
-	finalSize := len(a.handlers) + len(handlers)
+func (r *Router) path(p string) string {
+	if r.prefix == "/" {
+		return p
+	}
+
+	return r.prefix + p
+}
+
+func (r *Router) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
+	finalSize := len(r.handlers) + len(handlers)
 	mergedHandlers := make([]HandlerFunc, 0, finalSize)
-	mergedHandlers = append(mergedHandlers, a.handlers...)
+	mergedHandlers = append(mergedHandlers, r.handlers...)
 	return append(mergedHandlers, handlers...)
 
-	// aLen := len(a.handlers)
+	// aLen := len(r.handlers)
 	// hLen := len(handlers)
 	// h := make([]HandlerFunc, aLen+hLen)
 	// copy(h, a.handlers)
