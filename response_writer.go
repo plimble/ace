@@ -38,6 +38,9 @@ func (rw *responseWriter) reset(w http.ResponseWriter) {
 }
 
 func (rw *responseWriter) WriteHeader(s int) {
+	if rw.Written() {
+		fmt.Errorf("[ACE] WARNING. Headers were already written!")
+	}
 	rw.status = s
 	rw.callBefore()
 	rw.ResponseWriter.WriteHeader(s)
