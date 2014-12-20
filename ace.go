@@ -12,6 +12,7 @@ type Ace struct {
 	pool       sync.Pool
 }
 
+type PanicHandler func(c *C, rcv interface{})
 type HandlerFunc func(c *C)
 type ErrorHandlerFunc func(c *C, err error)
 

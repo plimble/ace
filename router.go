@@ -64,12 +64,10 @@ func (r *Router) RouteNotFound(h HandlerFunc) {
 	}
 }
 
-func (r *Router) Panic(h HandlerFunc) {
-	handlers := r.combineHandlers([]HandlerFunc{h})
+func (r *Router) Panic(h PanicHandler) {
 	r.ace.httprouter.PanicHandler = func(w http.ResponseWriter, req *http.Request, rcv interface{}) {
 		c := r.ace.CreateContext(w, req)
-		c.handlers = handlers
-		c.Next()
+		h(c, rcv)
 		r.ace.pool.Put(c)
 	}
 }
