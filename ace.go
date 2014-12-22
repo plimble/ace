@@ -2,6 +2,7 @@ package ace
 
 import (
 	"github.com/julienschmidt/httprouter"
+	"github.com/plimble/copter"
 	"net/http"
 	"sync"
 )
@@ -10,6 +11,7 @@ type Ace struct {
 	*Router
 	httprouter *httprouter.Router
 	pool       sync.Pool
+	render     *copter.Copter
 }
 
 type PanicHandler func(c *C, rcv interface{})
@@ -28,6 +30,7 @@ func New() *Ace {
 		c := &C{}
 		c.index = -1
 		c.Writer = &c.writercache
+		c.Data = make(map[string]interface{})
 		return c
 	}
 	return a

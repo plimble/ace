@@ -82,11 +82,19 @@ func (r *Router) Handler(h HandlerFunc) http.Handler {
 	})
 }
 
-func (r *Router) Static(path string, root http.Dir) {
+func (r *Router) Static(path string, root http.Dir, handlers ...HandlerFunc) {
 	path = r.path(path)
 	fileServer := http.StripPrefix(path, http.FileServer(root))
-	r.GET(path+"/*filepath", func(c *C) {
+
+	handlers = append(handlers, func(c *C) {
 		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
+
+	r.ace.httprouter.Handle("GET", path+"/*filepath", func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+		c := r.ace.CreateContext(w, req)
+		c.handlers = handlers
+		c.Next()
+		r.ace.pool.Put(c)
 	})
 }
 
@@ -110,17 +118,12 @@ func (r *Router) path(p string) string {
 }
 
 func (r *Router) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
-	finalSize := len(r.handlers) + len(handlers)
-	mergedHandlers := make([]HandlerFunc, 0, finalSize)
-	mergedHandlers = append(mergedHandlers, r.handlers...)
-	return append(mergedHandlers, handlers...)
-
-	// aLen := len(r.handlers)
-	// hLen := len(handlers)
-	// h := make([]HandlerFunc, aLen+hLen)
-	// copy(h, a.handlers)
-	// for i := 0; i < hLen; i++ {
-	// 	h[aLen+i] = handlers[i]
-	// }
-	// return h
+	aLen := len(r.handlers)
+	hLen := len(handlers)
+	h := make([]HandlerFunc, aLen+hLen)
+	copy(h, r.handlers)
+	for i := 0; i < hLen; i++ {
+		h[aLen+i] = handlers[i]
+	}
+	return h
 }

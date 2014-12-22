@@ -3,8 +3,8 @@ package ace
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/schema"
 	"github.com/julienschmidt/httprouter"
+	"github.com/plimble/copter"
 	"math"
 	"net/http"
 	"strings"
@@ -27,6 +27,9 @@ type C struct {
 	//recovery
 	context map[string]interface{}
 	err     error
+	Session *session
+	Data    map[string]interface{}
+	Render  *copter.Copter
 }
 
 func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
@@ -35,6 +38,9 @@ func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
 	c.Request = r
 	c.context = nil
 	c.index = -1
+	if a.render != nil {
+		c.Render = a.render
+	}
 
 	return c
 }
@@ -60,37 +66,18 @@ func (c *C) String(status int, format string, val ...interface{}) {
 	}
 }
 
-func (c *C) Data(status int, v []byte) {
+func (c *C) Download(status int, v []byte) {
 	c.Writer.WriteHeader(status)
 	c.Writer.Header().Set(ContentType, "application/octet-stream; charset=UTF-8")
 	c.Writer.Write(v)
 }
 
+func (c *C) HTML(name string) {
+	c.Render.ExecW(name, c.Data, c.Writer)
+}
+
 func (c *C) ParseJSON(v interface{}) error {
 	return json.NewDecoder(c.Request.Body).Decode(v)
-}
-
-func (c *C) ParseForm(v interface{}) error {
-	if err := c.Request.ParseForm(); err != nil {
-		return err
-	}
-
-	decoder := schema.NewDecoder()
-	return decoder.Decode(v, c.Request.Form)
-}
-
-func (c *C) ParseMultipartForm(v interface{}, maxMemory int64) error {
-	if err := c.Request.ParseMultipartForm(maxMemory); err != nil {
-		return err
-	}
-
-	decoder := schema.NewDecoder()
-	return decoder.Decode(v, c.Request.Form)
-}
-
-func (c *C) ParseQuery(v interface{}) error {
-	decoder := schema.NewDecoder()
-	return decoder.Decode(v, c.Request.URL.Query())
 }
 
 func (c *C) HTTPLang() string {
