@@ -30,7 +30,6 @@ func New() *Ace {
 		c := &C{}
 		c.index = -1
 		c.Writer = &c.writercache
-		c.Data = make(map[string]interface{})
 		return c
 	}
 	return a

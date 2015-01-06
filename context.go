@@ -40,6 +40,7 @@ func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
 	c.index = -1
 	if a.render != nil {
 		c.Render = a.render
+		c.Data = make(map[string]interface{})
 	}
 
 	return c
