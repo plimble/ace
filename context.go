@@ -52,14 +52,14 @@ func (c *C) JSON(status int, v interface{}) {
 		panic(err)
 	}
 
-	c.Writer.WriteHeader(status)
 	c.Writer.Header().Set(ContentType, "application/json; charset=UTF-8")
+	c.Writer.WriteHeader(status)
 	c.Writer.Write(result)
 }
 
 func (c *C) String(status int, format string, val ...interface{}) {
-	c.Writer.WriteHeader(status)
 	c.Writer.Header().Set(ContentType, "text/html; charset=UTF-8")
+	c.Writer.WriteHeader(status)
 	if len(val) == 0 {
 		c.Writer.Write([]byte(format))
 	} else {
@@ -68,8 +68,8 @@ func (c *C) String(status int, format string, val ...interface{}) {
 }
 
 func (c *C) Download(status int, v []byte) {
-	c.Writer.WriteHeader(status)
 	c.Writer.Header().Set(ContentType, "application/octet-stream; charset=UTF-8")
+	c.Writer.WriteHeader(status)
 	c.Writer.Write(v)
 }
 
