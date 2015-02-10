@@ -15,9 +15,10 @@ go get github.com/plimble/ace
 import "github.com/plimble/ace"
 ```
 
+## Performance
+Ace is very fast you can see on [this](https://gist.github.com/witooh/1c05c71d9510b2020e48)
+
 ##Usage
-
-
 
 #### Quick Start
 
