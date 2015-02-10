@@ -1,17 +1,24 @@
 # ACE
 
-Web framework by golang
+web framework by golang
 
-##Installation
+####Installation
 
 ```
 go get github.com/plimble/ace
 ```
 
+#### Import 
+
+```
+import "github.com/plimble/ace"
+```
+
 ##Usage
 
+
  
-Simple Start
+#### Quick Start
 
 ```
 a := ace.New()
@@ -22,7 +29,8 @@ a.Run(":8080")
 ```
 
 
-#### Use middleware
+#### Use Middlewares
+support middlewares logger , recovery , crsf
 
 ```
 a := ace.New()
@@ -30,11 +38,21 @@ a.Use(ace.Logger())
 ```
 
 
-#### Create ACE default builtin middleware logger & recovery
+#### Create ACE default builtin middlewares logger & recovery
 
 ```
 a := ace.Default()
+```
+#### Use GET, POST, PUT, PATCH, DELETE and OPTIONS
 
+```
+a.DELETE("/", myFunc)
+a.HEAD("/", myFunc)
+a.OPTIONS("/", myFunc)
+a.PATCH("/", myFunc)
+a.PUT("/", myFunc)
+a.POST("/", myFunc)
+a.GET("/", myFunc)
 ```
 
 #### Get param & Response json
@@ -95,7 +113,7 @@ a.UseSession("cookie", store, nil)
 
 ```
 
-Example
+Example Get , Set
 
 ```
 a.GET("/cookie", func(c *ace.C) {
