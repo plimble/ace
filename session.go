@@ -28,11 +28,54 @@ type SessionOptions struct {
 	HTTPOnly bool
 }
 
-func (s *session) Get(key string) interface{} {
-	return s.session.Values[key]
+func (s *session) isEmpty(v interface{}) bool {
+	return v == nil
 }
 
-func (s *session) Set(key string, v interface{}) {
+func (s *session) GetString(key string) string {
+	if s.isEmpty(s.session.Values[key]) {
+		return ""
+	}
+	return s.session.Values[key].(string)
+}
+
+func (s *session) GetInt(key string) int {
+	if s.isEmpty(s.session.Values[key]) {
+		return 0
+	}
+	return s.session.Values[key].(int)
+}
+
+func (s *session) GetFloat64(key string) float64 {
+	if s.isEmpty(s.session.Values[key]) {
+		return 0
+	}
+	return s.session.Values[key].(float64)
+}
+
+func (s *session) GetBool(key string) bool {
+	if s.isEmpty(s.session.Values[key]) {
+		return false
+	}
+	return s.session.Values[key].(bool)
+}
+
+func (s *session) SetString(key string, v string) {
+	s.session.Values[key] = v
+	s.isWriten = true
+}
+
+func (s *session) SetInt(key string, v int) {
+	s.session.Values[key] = v
+	s.isWriten = true
+}
+
+func (s *session) SetFloat64(key string, v float64) {
+	s.session.Values[key] = v
+	s.isWriten = true
+}
+
+func (s *session) SetBool(key string, v bool) {
 	s.session.Values[key] = v
 	s.isWriten = true
 }
