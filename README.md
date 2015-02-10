@@ -164,7 +164,7 @@ options := &ace.CSRFOptions{
 a.Use(ace.CSRF(options))
 ```
 
-#### HTML Template Engine
+## HTML Template Engine
 Ace use [Pongo2](https://github.com/flosch/pongo2) as a default template engine
 
 ```
