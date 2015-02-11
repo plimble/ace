@@ -179,11 +179,11 @@ type Renderer interface {
 
 | Name                                                	| Description                                 	|
 |-----------------------------------------------------	|---------------------------------------------	|
-| [gzip](github.com/plimble/ace-contrib/gzip)         	| GZIP compress                               	|
-| [cors](github.com/plimble/ace-contrib/cors)         	| Enable Cross-origin resource sharing (CORS) 	|
-| [sessions](github.com/plimble/ace-contrib/sessions) 	| Gorilla Sessions                            	|
-| [pongo2](github.com/plimble/ace-contrib/pongo2)     	| Pongo2 Template Engine                      	|
-| [csrf](github.com/plimble/ace-contrib/csrf)         	| Cross Site Request Forgery protection       	|
+| [gzip](https://github.com/plimble/ace-contrib/tree/master/gzip)         	| GZIP compress                               	|
+| [cors](https://github.com/plimble/ace-contrib/tree/master/cors)         	| Enable Cross-origin resource sharing (CORS) 	|
+| [sessions](https://github.com/plimble/ace-contrib/tree/master/sessions) 	| Gorilla Sessions                            	|
+| [pongo2](https://github.com/plimble/ace-contrib/tree/master/pongo2)     	| Pongo2 Template Engine                      	|
+| [csrf](https://github.com/plimble/ace-contrib/tree/master/csrf)         	| Cross Site Request Forgery protection       	|
 
 ###Contributing
 
