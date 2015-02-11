@@ -85,6 +85,7 @@ func (c *C) Redirect(url string) {
 	http.Redirect(c.Writer, c.Request, url, 302)
 }
 
+//Stop call maddileware
 func (c *C) Abort(status int) {
 	c.Writer.WriteHeader(status)
 	c.index = AbortIndex
@@ -109,14 +110,7 @@ func (c *C) Next() {
 }
 
 func (c *C) ClientIP() string {
-	clientIP := c.Request.Header.Get("X-Real-IP")
-	if len(clientIP) == 0 {
-		clientIP = c.Request.Header.Get("X-Forwarded-For")
-	}
-	if len(clientIP) == 0 {
-		clientIP = c.Request.RemoteAddr
-	}
-	return clientIP
+	return c.Request.RemoteAddr
 }
 
 func (c *C) Set(key string, v interface{}) {
