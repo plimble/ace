@@ -166,34 +166,24 @@ a.Use(ace.CSRF(options))
 ```
 
 ## HTML Template Engine
-Ace use [Pongo2](https://github.com/flosch/pongo2) as a default template engine
+Ace built on renderer interface. So you can use any template engine
 
 ```
-options := &ace.TemplateOptions{
-	Directory: "./web",
-	IsDevelopment: true,
-	Extensions: []string{},
+type Renderer interface {
+	Render(w http.ResponseWriter, name string, data interface{})
 }
-a.UseTemplate(at)
-
-a.GET("/", func(c *ace.C) {
-	c.Data["fname"] = "John"
-	c.Data["lname"] = "Doe"
-	c.HTML("index.html")
-})
-```
-
-#####index.html
-
-```
-Hello ACE {{fname}} {{lname}}
 ```
 
 
+### ACE Middlewares
 
-
-
-
+| Name                                                	| Description                                 	|
+|-----------------------------------------------------	|---------------------------------------------	|
+| [gzip](github.com/plimble/ace-contrib/gzip)         	| GZIP compress                               	|
+| [cors](github.com/plimble/ace-contrib/cors)         	| Enable Cross-origin resource sharing (CORS) 	|
+| [sessions](github.com/plimble/ace-contrib/sessions) 	| Gorilla Sessions                            	|
+| [pongo2](github.com/plimble/ace-contrib/pongo2)     	| Pongo2 Template Engine                      	|
+| [csrf](github.com/plimble/ace-contrib/csrf)         	| Cross Site Request Forgery protection       	|
 
 ###Contributing
 
