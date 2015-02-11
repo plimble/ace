@@ -75,14 +75,21 @@ func (r *Router) Panic(h PanicHandler) {
 }
 
 //Handler convert ace.HandlerFunc to http.Handler
-func (r *Router) Handler(h HandlerFunc) http.Handler {
-	handlers := r.combineHandlers([]HandlerFunc{h})
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		c := r.ace.CreateContext(w, req)
-		c.handlers = handlers
-		c.Next()
-		r.ace.pool.Put(c)
-	})
+// func (r *Router) HandlerFunc(h HandlerFunc) http.Handler {
+// 	handlers := r.combineHandlers([]HandlerFunc{h})
+// 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+// 		c := r.ace.CreateContext(w, req)
+// 		c.handlers = handlers
+// 		c.Next()
+// 		r.ace.pool.Put(c)
+// 	})
+// }
+
+//HandlerFunc convert http.HandlerFunc to ace.HandlerFunc
+func (r *Router) HandlerFunc(h http.HandlerFunc) HandlerFunc {
+	return func(c *C) {
+		h(c.Writer, c.Request)
+	}
 }
 
 func (r *Router) Static(path string, root http.Dir, handlers ...HandlerFunc) {
