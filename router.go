@@ -54,6 +54,7 @@ func (r *Router) Group(path string, handlers ...HandlerFunc) *Router {
 	}
 }
 
+//RouteNotFound call when route does not match
 func (r *Router) RouteNotFound(h HandlerFunc) {
 	handlers := r.combineHandlers([]HandlerFunc{h})
 	r.ace.httprouter.NotFound = func(w http.ResponseWriter, req *http.Request) {
@@ -64,6 +65,7 @@ func (r *Router) RouteNotFound(h HandlerFunc) {
 	}
 }
 
+//Panic call when panic was called
 func (r *Router) Panic(h PanicHandler) {
 	r.ace.httprouter.PanicHandler = func(w http.ResponseWriter, req *http.Request, rcv interface{}) {
 		c := r.ace.CreateContext(w, req)
@@ -72,6 +74,7 @@ func (r *Router) Panic(h PanicHandler) {
 	}
 }
 
+//Handler convert ace.HandlerFunc to http.Handler
 func (r *Router) Handler(h HandlerFunc) http.Handler {
 	handlers := r.combineHandlers([]HandlerFunc{h})
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
