@@ -1,19 +1,13 @@
 package ace
 
 import (
-	"github.com/plimble/copter"
+	"net/http"
 )
 
-type TemplateOptions struct {
-	Directory     string
-	Extensions    []string
-	IsDevelopment bool
+type Renderer interface {
+	Render(w http.ResponseWriter, name string, data interface{})
 }
 
-func (a *Ace) UseTemplate(options *TemplateOptions) {
-	a.render = copter.New(&copter.Options{
-		Directory:     options.Directory,
-		Extensions:    options.Extensions,
-		IsDevelopment: options.IsDevelopment,
-	})
+func (a *Ace) UseHtmlTemplate(render Renderer) {
+	a.render = render
 }

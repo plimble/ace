@@ -2,7 +2,6 @@ package ace
 
 import (
 	"github.com/julienschmidt/httprouter"
-	"github.com/plimble/copter"
 	"net/http"
 	"sync"
 )
@@ -11,7 +10,7 @@ type Ace struct {
 	*Router
 	httprouter *httprouter.Router
 	pool       sync.Pool
-	render     *copter.Copter
+	render     Renderer
 }
 
 type PanicHandler func(c *C, rcv interface{})
