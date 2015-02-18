@@ -56,7 +56,7 @@ a.GET("/", HandlerFunc)
 ```
 	a := ace.New()
 
-	a.Get("/", func(c *ace.C){
+	a.GET("/", func(c *ace.C){
 		c.String(200, "Hello world")
 	})
 
