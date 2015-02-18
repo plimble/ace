@@ -139,3 +139,7 @@ func (c *C) Set(key string, v interface{}) {
 func (c *C) Get(key string) interface{} {
 	return c.context[key]
 }
+
+func (c *C) GetContext() map[string]interface{} {
+	return c.context
+}
