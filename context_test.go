@@ -11,14 +11,10 @@ import (
 func TestJSONResp(t *testing.T) {
 	assert := assert.New(t)
 
-	data := struct {
-		s string `json:"s"`
-		n int    `json:"n"`
-		b bool   `json:"b"`
-	}{
-		s: "test",
-		n: 123,
-		b: true,
+	data := map[string]interface{}{
+		"s": "test",
+		"n": 123,
+		"b": true,
 	}
 
 	a := New()
@@ -32,7 +28,7 @@ func TestJSONResp(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 	assert.Equal(200, w.Code)
-	assert.Equal(result, w.Body.String())
+	assert.Equal(string(result), w.Body.String())
 	assert.Equal("application/json; charset=UTF-8", w.Header().Get("Content-Type"))
 }
 
