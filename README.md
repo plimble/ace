@@ -171,16 +171,6 @@ a.Use(ace.Logger())
 a.Use(ace.Recovery())
 ```
 
-##### CSRF
-```
-options := &ace.CSRFOptions{
-	FailedHandler: func(c *ace.C){
-		c.String(500, "Invalid CSRF Token")
-	}
-}
-a.Use(ace.CSRF(options))
-```
-
 ## HTML Template Engine
 Ace built on renderer interface. So you can use any template engine
 
