@@ -13,7 +13,7 @@ func Test_Logger(t *testing.T) {
 	// replace log for testing
 	r.Use(Logger())
 	r.GET("/", func(c *C) {
-		c.Abort(404)
+		c.AbortWithStatus(404)
 	})
 
 	req, err := http.NewRequest("GET", "/", nil)

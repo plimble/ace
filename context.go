@@ -25,17 +25,15 @@ type C struct {
 	handlers         []HandlerFunc
 	errorHandlerFunc ErrorHandlerFunc
 	//recovery
-	context map[string]interface{}
-	err     error
+	data    map[string]interface{}
 	Session *session
 	render  Renderer
 }
 
-func (a *Ace) CreateContext(w http.ResponseWriter, r *http.Request) *C {
+func (a *Ace) createContext(w http.ResponseWriter, r *http.Request) *C {
 	c := a.pool.Get().(*C)
 	c.writercache.reset(w)
 	c.Request = r
-	c.context = nil
 	c.index = -1
 	c.render = a.render
 
@@ -93,24 +91,15 @@ func (c *C) Redirect(url string) {
 	http.Redirect(c.Writer, c.Request, url, 302)
 }
 
-//Stop call maddileware
+//Abort stop maddileware
 func (c *C) Abort() {
 	c.index = abortIndex
 }
 
+//AbortWithStatus stop maddileware and return http status code
 func (c *C) AbortWithStatus(status int) {
 	c.Writer.WriteHeader(status)
 	c.Abort()
-}
-
-func (c *C) Error(err error) {
-	c.err = err
-	c.errorHandlerFunc(c, err)
-	c.index = abortIndex
-}
-
-func (c *C) GetError() error {
-	return c.err
 }
 
 //Next next middleware
@@ -127,19 +116,20 @@ func (c *C) ClientIP() string {
 	return c.Request.RemoteAddr
 }
 
-//Set context
-func (c *C) Set(key string, v interface{}) {
-	if c.context == nil {
-		c.context = make(map[string]interface{})
+//Set data
+func (c *C) SetData(key string, v interface{}) {
+	if c.data == nil {
+		c.data = make(map[string]interface{})
 	}
-	c.context[key] = v
+	c.data[key] = v
 }
 
-//Get context
-func (c *C) Get(key string) interface{} {
-	return c.context[key]
+//Get data
+func (c *C) GetData(key string) interface{} {
+	return c.data[key]
 }
 
-func (c *C) GetContext() map[string]interface{} {
-	return c.context
+//GetAllData return all data
+func (c *C) GetAllData() map[string]interface{} {
+	return c.data
 }

@@ -17,6 +17,7 @@ type session struct {
 	isNew    bool
 }
 
+//SessionOptions session options
 type SessionOptions struct {
 	Path   string
 	Domain string
@@ -32,6 +33,7 @@ func (s *session) isEmpty(v interface{}) bool {
 	return v == nil
 }
 
+//GetString return string value
 func (s *session) GetString(key string) string {
 	if s.isEmpty(s.session.Values[key]) {
 		return ""
@@ -39,6 +41,7 @@ func (s *session) GetString(key string) string {
 	return s.session.Values[key].(string)
 }
 
+//GetInt return int value
 func (s *session) GetInt(key string) int {
 	if s.isEmpty(s.session.Values[key]) {
 		return 0
@@ -46,6 +49,7 @@ func (s *session) GetInt(key string) int {
 	return s.session.Values[key].(int)
 }
 
+//GetFloat64 return float64 value
 func (s *session) GetFloat64(key string) float64 {
 	if s.isEmpty(s.session.Values[key]) {
 		return 0
@@ -53,6 +57,7 @@ func (s *session) GetFloat64(key string) float64 {
 	return s.session.Values[key].(float64)
 }
 
+//GetBool return bool value
 func (s *session) GetBool(key string) bool {
 	if s.isEmpty(s.session.Values[key]) {
 		return false
@@ -60,7 +65,8 @@ func (s *session) GetBool(key string) bool {
 	return s.session.Values[key].(bool)
 }
 
-func (s *session) SetString(key string, v string) {
+//Set set session value
+func (s *session) Set(key string, v interface{}) {
 	s.session.Values[key] = v
 	s.isWriten = true
 }
@@ -80,21 +86,25 @@ func (s *session) SetBool(key string, v bool) {
 	s.isWriten = true
 }
 
+//AddFlash add flash message into session
 func (s *session) AddFlash(value interface{}, vars ...string) {
 	s.session.AddFlash(value, vars...)
 	s.isWriten = true
 }
 
+//Flashes get all flash message then remove all from session
 func (s *session) Flashes(vars ...string) []interface{} {
 	s.isWriten = true
 	return s.session.Flashes(vars...)
 }
 
+//Delete session value
 func (s *session) Delete(key string) {
 	delete(s.session.Values, key)
 	s.isWriten = true
 }
 
+//Clear remove all session value
 func (s *session) Clear() {
 	for key := range s.session.Values {
 		delete(s.session.Values, key)
@@ -102,11 +112,13 @@ func (s *session) Clear() {
 	s.isWriten = true
 }
 
+//IsNew check session have created before
 func (s *session) IsNew() bool {
 	return s.isNew
 }
 
-func (a *Ace) UseSession(name string, store sessions.Store, options *SessionOptions) {
+//Session use session middleware
+func (a *Ace) Session(name string, store sessions.Store, options *SessionOptions) {
 	sessionStore := store
 
 	var sessionOptions *sessions.Options
@@ -121,6 +133,7 @@ func (a *Ace) UseSession(name string, store sessions.Store, options *SessionOpti
 	}
 
 	a.Use(func(c *C) {
+		defer context.Clear(c.Request)
 		s, _ := sessionStore.Get(c.Request, name)
 		if sessionOptions != nil {
 			s.Options = sessionOptions
@@ -131,8 +144,6 @@ func (a *Ace) UseSession(name string, store sessions.Store, options *SessionOpti
 				c.Session.session.Save(c.Request, c.Writer)
 			}
 		})
-
-		defer context.Clear(c.Request)
 		c.Next()
 	})
 }

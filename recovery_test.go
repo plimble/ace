@@ -3,6 +3,8 @@ package ace
 import (
 	"bytes"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
@@ -18,7 +20,9 @@ func TestPanicInHandler(t *testing.T) {
 	})
 
 	// RUN
-	w := PerformRequest(r, "GET", "/recovery")
+	req, _ := http.NewRequest("GET", "/recovery", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
 
 	// restore logging
 	log.SetOutput(os.Stderr)
@@ -35,18 +39,20 @@ func TestPanicWithAbort(t *testing.T) {
 	r := New()
 	r.Use(Recovery())
 	r.GET("/recovery", func(c *C) {
-		c.Abort(400)
+		c.AbortWithStatus(500)
 		panic("Oupps, Houston, we have a problem")
 	})
 
 	// RUN
-	w := PerformRequest(r, "GET", "/recovery")
+	req, _ := http.NewRequest("GET", "/recovery", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
 
 	// restore logging
 	log.SetOutput(os.Stderr)
 
 	// TEST
-	if w.Code != 400 {
+	if w.Code != 500 {
 		t.Errorf("Response code should be Bad request, was: %v", w.Code)
 	}
 }

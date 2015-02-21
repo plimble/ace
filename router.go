@@ -5,61 +5,69 @@ import (
 	"net/http"
 )
 
+//Router http router
 type Router struct {
 	handlers []HandlerFunc
 	prefix   string
 	ace      *Ace
 }
 
+//Use register middleware
 func (r *Router) Use(middlewares ...HandlerFunc) {
 	for _, handler := range middlewares {
 		r.handlers = append(r.handlers, handler)
 	}
 }
 
+//GET handle GET method
 func (r *Router) GET(path string, handlers ...HandlerFunc) {
 	r.Handle("GET", path, handlers)
 }
 
+//POST handle POST method
 func (r *Router) POST(path string, handlers ...HandlerFunc) {
 	r.Handle("POST", path, handlers)
 }
 
+//PATCH handle PATCH method
 func (r *Router) PATCH(path string, handlers ...HandlerFunc) {
 	r.Handle("PATCH", path, handlers)
 }
 
+//PUT handle PUT method
 func (r *Router) PUT(path string, handlers ...HandlerFunc) {
 	r.Handle("PUT", path, handlers)
 }
 
+//DELETE handle DELETE method
 func (r *Router) DELETE(path string, handlers ...HandlerFunc) {
 	r.Handle("DELETE", path, handlers)
 }
 
+//HEAD handle HEAD method
 func (r *Router) HEAD(path string, handlers ...HandlerFunc) {
 	r.Handle("HEAD", path, handlers)
 }
 
+//OPTIONS handle OPTIONS method
 func (r *Router) OPTIONS(path string, handlers ...HandlerFunc) {
 	r.Handle("OPTIONS", path, handlers)
 }
 
+//Group group route
 func (r *Router) Group(path string, handlers ...HandlerFunc) *Router {
-	handlers = r.combineHandlers(handlers)
 	return &Router{
-		handlers: handlers,
+		handlers: r.combineHandlers(handlers),
 		prefix:   path,
 		ace:      r.ace,
 	}
 }
 
 //RouteNotFound call when route does not match
-func (r *Router) RouteNotFound(h HandlerFunc) {
-	handlers := r.combineHandlers([]HandlerFunc{h})
+func (r *Router) NotFound(h HandlerFunc) {
 	r.ace.httprouter.NotFound = func(w http.ResponseWriter, req *http.Request) {
-		c := r.ace.CreateContext(w, req)
-		c.handlers = handlers
+		c := r.ace.createContext(w, req)
+		c.handlers = r.combineHandlers([]HandlerFunc{h})
 		c.Next()
 		r.ace.pool.Put(c)
 	}
@@ -68,7 +76,7 @@ func (r *Router) RouteNotFound(h HandlerFunc) {
 //Panic call when panic was called
 func (r *Router) Panic(h PanicHandler) {
 	r.ace.httprouter.PanicHandler = func(w http.ResponseWriter, req *http.Request, rcv interface{}) {
-		c := r.ace.CreateContext(w, req)
+		c := r.ace.createContext(w, req)
 		h(c, rcv)
 		r.ace.pool.Put(c)
 	}
@@ -92,6 +100,9 @@ func (r *Router) HandlerFunc(h http.HandlerFunc) HandlerFunc {
 	}
 }
 
+//Static server static file
+//path is url path
+//root is root directory
 func (r *Router) Static(path string, root http.Dir, handlers ...HandlerFunc) {
 	path = r.path(path)
 	fileServer := http.StripPrefix(path, http.FileServer(root))
@@ -101,19 +112,19 @@ func (r *Router) Static(path string, root http.Dir, handlers ...HandlerFunc) {
 	})
 
 	r.ace.httprouter.Handle("GET", path+"/*filepath", func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-		c := r.ace.CreateContext(w, req)
+		c := r.ace.createContext(w, req)
 		c.handlers = handlers
 		c.Next()
 		r.ace.pool.Put(c)
 	})
 }
 
+//Handle handle with specific method
 func (r *Router) Handle(method, path string, handlers []HandlerFunc) {
-	handlers = r.combineHandlers(handlers)
 	r.ace.httprouter.Handle(method, r.path(path), func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		c := r.ace.CreateContext(w, req)
+		c := r.ace.createContext(w, req)
 		c.Params = params
-		c.handlers = handlers
+		c.handlers = r.combineHandlers(handlers)
 		c.Next()
 		r.ace.pool.Put(c)
 	})
