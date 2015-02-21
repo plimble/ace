@@ -1,4 +1,4 @@
-ACE [![godoc badge](http://godoc.org/github.com/plimble/ace?status.png)](http://godoc.org/github.com/plimble/ace)   [![gocover badge](http://gocover.io/_badge/github.com/plimble/ace?t=2)](http://gocover.io/github.com/plimble/ace) [![Build Status](https://api.travis-ci.org/plimble/ace.svg?branch=master&t=2)](https://travis-ci.org/plimble/ace) [![Go Report Card](http://goreportcard.com/badge/plimble/ace?t=2)](http:/goreportcard.com/report/plimble/ace)
+ACE [![godoc badge](http://godoc.org/github.com/plimble/ace?status.png)](http://godoc.org/github.com/plimble/ace)   [![gocover badge](http://gocover.io/_badge/github.com/plimble/ace?t=3)](http://gocover.io/github.com/plimble/ace) [![Build Status](https://api.travis-ci.org/plimble/ace.svg?branch=master&t=3)](https://travis-ci.org/plimble/ace) [![Go Report Card](http://goreportcard.com/badge/plimble/ace?t=3)](http:/goreportcard.com/report/plimble/ace)
 ========
 
 Blazing fast Go Web Framework
