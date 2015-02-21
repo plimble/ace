@@ -114,6 +114,20 @@ g.POST("/:name", func(c *ace.C) {
 })
 ```
 
+## Data
+Set/Get data in any HandlerFunc
+```go
+a.Use(func(c *ace.C){
+	c.SetData("isLogin", true)
+})
+
+a.Get("/", func(c *ace.C){
+	isLogin := c.GetData("isLogin").(bool)
+	//or get all data
+	//c.GetAllData()
+})
+```
+
 
 ## Middlewares
 Ace middleware is implemented by custom handler
