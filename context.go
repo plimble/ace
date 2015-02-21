@@ -17,13 +17,12 @@ const (
 
 //C is context for every goroutine
 type C struct {
-	writercache      responseWriter
-	Params           httprouter.Params
-	Request          *http.Request
-	Writer           ResponseWriter
-	index            int8
-	handlers         []HandlerFunc
-	errorHandlerFunc ErrorHandlerFunc
+	writercache responseWriter
+	Params      httprouter.Params
+	Request     *http.Request
+	Writer      ResponseWriter
+	index       int8
+	handlers    []HandlerFunc
 	//recovery
 	data    map[string]interface{}
 	Session *session

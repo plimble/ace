@@ -15,7 +15,6 @@ type Ace struct {
 
 type PanicHandler func(c *C, rcv interface{})
 type HandlerFunc func(c *C)
-type ErrorHandlerFunc func(c *C, err error)
 
 func New() *Ace {
 	a := &Ace{}
