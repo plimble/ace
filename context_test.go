@@ -12,9 +12,9 @@ func TestJSONResp(t *testing.T) {
 	assert := assert.New(t)
 
 	data := struct {
-		s string
-		n int
-		b bool
+		s string `json:"s"`
+		n int    `json:"n"`
+		b bool   `json:"b"`
 	}{
 		s: "test",
 		n: 123,

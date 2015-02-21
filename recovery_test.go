@@ -28,7 +28,7 @@ func TestPanicInHandler(t *testing.T) {
 	log.SetOutput(os.Stderr)
 
 	if w.Code != 500 {
-		t.Errorf("Response code should be Internal Server Error, was: %s", w.Code)
+		t.Errorf("Response code should be Internal Server Error, was: %d", w.Code)
 	}
 }
 
