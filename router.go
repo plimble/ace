@@ -56,8 +56,9 @@ func (r *Router) OPTIONS(path string, handlers ...HandlerFunc) {
 
 //Group group route
 func (r *Router) Group(path string, handlers ...HandlerFunc) *Router {
+	handlers = r.combineHandlers(handlers)
 	return &Router{
-		handlers: r.combineHandlers(handlers),
+		handlers: handlers,
 		prefix:   path,
 		ace:      r.ace,
 	}
@@ -65,9 +66,10 @@ func (r *Router) Group(path string, handlers ...HandlerFunc) *Router {
 
 //RouteNotFound call when route does not match
 func (r *Router) RouteNotFound(h HandlerFunc) {
+	handlers := r.combineHandlers([]HandlerFunc{h})
 	r.ace.httprouter.NotFound = func(w http.ResponseWriter, req *http.Request) {
 		c := r.ace.createContext(w, req)
-		c.handlers = r.combineHandlers([]HandlerFunc{h})
+		c.handlers = handlers
 		c.Next()
 		r.ace.pool.Put(c)
 	}
@@ -121,10 +123,11 @@ func (r *Router) Static(path string, root http.Dir, handlers ...HandlerFunc) {
 
 //Handle handle with specific method
 func (r *Router) Handle(method, path string, handlers []HandlerFunc) {
+	handlers = r.combineHandlers(handlers)
 	r.ace.httprouter.Handle(method, r.path(path), func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		c := r.ace.createContext(w, req)
 		c.Params = params
-		c.handlers = r.combineHandlers(handlers)
+		c.handlers = handlers
 		c.Next()
 		r.ace.pool.Put(c)
 	})

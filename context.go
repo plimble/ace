@@ -34,6 +34,7 @@ func (a *Ace) createContext(w http.ResponseWriter, r *http.Request) *C {
 	c.writercache.reset(w)
 	c.Request = r
 	c.index = -1
+	c.data = nil
 	c.render = a.render
 
 	return c
