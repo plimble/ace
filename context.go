@@ -6,7 +6,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -132,4 +134,100 @@ func (c *C) GetData(key string) interface{} {
 //GetAllData return all data
 func (c *C) GetAllData() map[string]interface{} {
 	return c.data
+}
+
+func (c *C) MustQueryInt(key string, d int) int {
+	val := c.Request.URL.Query().Get(key)
+	if val == "" {
+		return d
+	}
+	i, err := strconv.Atoi(val)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return i
+}
+
+func (c *C) MustQueryFloat64(key string, d float64) float64 {
+	val := c.Request.URL.Query().Get(key)
+	if val == "" {
+		return d
+	}
+	f, err := strconv.ParseFloat(c.Request.URL.Query().Get(key), 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return f
+}
+
+func (c *C) MustQueryString(key, d string) string {
+	return c.Request.URL.Query().Get(key)
+}
+
+func (c *C) MustQueryStrings(key string, d []string) []string {
+	return c.Request.URL.Query()[key]
+}
+
+func (c *C) MustQueryTime(key string, layout string, d time.Time) time.Time {
+	val := c.Request.URL.Query().Get(key)
+	if val == "" {
+		return d
+	}
+	t, err := time.Parse(layout, c.Request.URL.Query().Get(key))
+	if err != nil {
+		panic(err)
+	}
+
+	return t
+}
+
+/////////////////////////
+
+func (c *C) MustPostInt(key string, d int) int {
+	val := c.Request.PostFormValue(key)
+	if val == "" {
+		return d
+	}
+	i, err := strconv.Atoi(val)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return i
+}
+
+func (c *C) MustPostFloat64(key string, d float64) float64 {
+	val := c.Request.PostFormValue(key)
+	if val == "" {
+		return d
+	}
+	f, err := strconv.ParseFloat(c.Request.URL.Query().Get(key), 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return f
+}
+
+func (c *C) MustPostString(key, d string) string {
+	return c.Request.PostFormValue(key)
+}
+
+func (c *C) MustPostStrings(key string, d []string) []string {
+	return c.Request.PostForm[key]
+}
+
+func (c *C) MustPostTime(key string, layout string, d time.Time) time.Time {
+	val := c.Request.PostFormValue(key)
+	if val == "" {
+		return d
+	}
+	t, err := time.Parse(layout, c.Request.URL.Query().Get(key))
+	if err != nil {
+		panic(err)
+	}
+
+	return t
 }
