@@ -44,6 +44,12 @@ func (a *Ace) createContext(w http.ResponseWriter, r *http.Request) *C {
 
 //JSON response with application/json; charset=UTF-8 Content type
 func (c *C) JSON(status int, v interface{}) {
+	if v == nil {
+		c.Writer.Header().Set(contentType, "application/json; charset=UTF-8")
+		c.Writer.WriteHeader(status)
+		return
+	}
+
 	result, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
