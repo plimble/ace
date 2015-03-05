@@ -85,6 +85,7 @@ func (c *C) HTML(name string, data interface{}) {
 
 //ParseJSON decode json to interface{}
 func (c *C) ParseJSON(v interface{}) error {
+	defer c.Request.Body.Close()
 	return json.NewDecoder(c.Request.Body).Decode(v)
 }
 
@@ -169,11 +170,21 @@ func (c *C) MustQueryFloat64(key string, d float64) float64 {
 }
 
 func (c *C) MustQueryString(key, d string) string {
-	return c.Request.URL.Query().Get(key)
+	val := c.Request.URL.Query().Get(key)
+	if val == "" {
+		return d
+	}
+
+	return val
 }
 
 func (c *C) MustQueryStrings(key string, d []string) []string {
-	return c.Request.URL.Query()[key]
+	val := c.Request.URL.Query()[key]
+	if len(val) == 0 {
+		return d
+	}
+
+	return val
 }
 
 func (c *C) MustQueryTime(key string, layout string, d time.Time) time.Time {
@@ -218,11 +229,25 @@ func (c *C) MustPostFloat64(key string, d float64) float64 {
 }
 
 func (c *C) MustPostString(key, d string) string {
-	return c.Request.PostFormValue(key)
+	val := c.Request.PostFormValue(key)
+	if val == "" {
+		return d
+	}
+
+	return val
 }
 
 func (c *C) MustPostStrings(key string, d []string) []string {
-	return c.Request.PostForm[key]
+	if c.Request.PostForm == nil {
+		c.Request.ParseForm()
+	}
+
+	val := c.Request.PostForm[key]
+	if len(val) == 0 {
+		return d
+	}
+
+	return val
 }
 
 func (c *C) MustPostTime(key string, layout string, d time.Time) time.Time {
