@@ -44,9 +44,9 @@ func (a *Ace) createContext(w http.ResponseWriter, r *http.Request) *C {
 
 //JSON response with application/json; charset=UTF-8 Content type
 func (c *C) JSON(status int, v interface{}) {
+	c.Writer.Header().Set(contentType, "application/json; charset=UTF-8")
+	c.Writer.WriteHeader(status)
 	if v == nil {
-		c.Writer.Header().Set(contentType, "application/json; charset=UTF-8")
-		c.Writer.WriteHeader(status)
 		return
 	}
 
@@ -55,8 +55,6 @@ func (c *C) JSON(status int, v interface{}) {
 		panic(err)
 	}
 
-	c.Writer.Header().Set(contentType, "application/json; charset=UTF-8")
-	c.Writer.WriteHeader(status)
 	c.Writer.Write(result)
 }
 
