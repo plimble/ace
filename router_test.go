@@ -212,3 +212,14 @@ func TestPanic(t *testing.T) {
 	a.ServeHTTP(w, r)
 	assert.Equal(500, w.Code)
 }
+
+func TestStaticPath(t *testing.T) {
+	assert := assert.New(t)
+
+	a := New()
+	path := a.Router.staticPath("/")
+	assert.Equal("/*filepath", path)
+
+	path = a.Router.staticPath("/public")
+	assert.Equal("/public/*filepath", path)
+}

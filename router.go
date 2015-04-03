@@ -113,7 +113,7 @@ func (r *Router) Static(path string, root http.Dir, handlers ...HandlerFunc) {
 		fileServer.ServeHTTP(c.Writer, c.Request)
 	})
 
-	r.ace.httprouter.Handle("GET", path+"/*filepath", func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	r.ace.httprouter.Handle("GET", r.staticPath(path), func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 		c := r.ace.createContext(w, req)
 		c.handlers = handlers
 		c.Next()
@@ -131,6 +131,14 @@ func (r *Router) Handle(method, path string, handlers []HandlerFunc) {
 		c.Next()
 		r.ace.pool.Put(c)
 	})
+}
+
+func (r *Router) staticPath(p string) string {
+	if p == "/" {
+		return "/*filepath"
+	}
+
+	return concat(p, "/*filepath")
 }
 
 func (r *Router) path(p string) string {
