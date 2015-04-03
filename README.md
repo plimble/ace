@@ -26,10 +26,10 @@ Ace is very fast you can see on [this](https://gist.github.com/witooh/1c05c71d95
 
 ```
 a := ace.New()
-a.GET("/", func(c *ace.C) {
+a.GET("/:name", func(c *ace.C) {
 	name := c.Params.ByName("name")
 	c.JSON(200, map[string]string{"hello": name})
-}
+})
 a.Run(":8080")
 ```
 
@@ -38,7 +38,7 @@ Default Middleware (Logger, Recovery)
 a := ace.Default()
 a.GET("/", func(c *ace.C) {
 	c.String(200,"Hello ACE")
-}
+})
 a.Run(":8080")
 ```
 
