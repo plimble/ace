@@ -199,9 +199,14 @@ func TestRouteNotFound(t *testing.T) {
 
 func TestPanic(t *testing.T) {
 	assert := assert.New(t)
+	mid := ""
 
 	a := New()
 	a.Use(Recovery())
+	a.Use(func(c *C) {
+		mid = "before panic"
+		c.Next()
+	})
 
 	a.GET("/", func(c *C) {
 		panic("panic test")
@@ -211,6 +216,7 @@ func TestPanic(t *testing.T) {
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 	assert.Equal(500, w.Code)
+	assert.Equal("before panic", mid)
 }
 
 func TestStaticPath(t *testing.T) {
