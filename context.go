@@ -63,9 +63,9 @@ func (c *C) String(status int, format string, val ...interface{}) {
 	c.Writer.Header().Set(contentType, "text/html; charset=UTF-8")
 	c.Writer.WriteHeader(status)
 	if len(val) == 0 {
-		c.Writer.Write(stringToBytes(format))
+		c.Writer.Write([]byte(format))
 	} else {
-		c.Writer.Write(stringToBytes(fmt.Sprintf(format, val...)))
+		c.Writer.Write([]byte(fmt.Sprintf(format, val...)))
 	}
 }
 
