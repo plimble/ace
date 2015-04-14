@@ -147,18 +147,27 @@ a.Use(ace.Logger())
 a.Static("/assets", "./img")
 ```
 
-##### Session with Gorilla sessions
+##### Session
+
+You can use store from [sessions](https://github.com/plimble/sessions)
 
 ```
-var store = sessions.NewCookieStore([]byte("something-very-secret"))
-a.UseSession("cookie", store, nil)
+import github.com/plimble/sessions/store/cookie
+
+var store = cookie.NewCookieStore()
+a.UseSession(store, nil)
 
 ```
 
 ```
 a.GET("/hello", func(c *ace.C) {
-	c.Session.SetString("name", "John Doe")
-	fmt.Println(c.Session.GetString("name"))
+	session, err := c.Sessions.Get("session-name")
+	if err != nil{
+		panic(err)
+	}
+
+	session.Set("key", "value")
+	fmt.Println(c.Session.GetString("key"))
 }
 ```
 ##### Logger
@@ -187,7 +196,7 @@ type Renderer interface {
 |-----------------------------------------------------	|---------------------------------------------	|
 | [gzip](https://github.com/plimble/ace-contrib/tree/master/gzip)         	| GZIP compress                               	|
 | [cors](https://github.com/plimble/ace-contrib/tree/master/cors)         	| Enable Cross-origin resource sharing (CORS) 	|
-| [sessions](https://github.com/plimble/sessions) 													| Sessions                            	|
+| [sessions](https://github.com/plimble/sessions) 													| Sessions      				                      	|
 | [pongo2](https://github.com/plimble/ace-contrib/tree/master/pongo2)     	| Pongo2 Template Engine                      	|
 | [csrf](https://github.com/plimble/ace-contrib/tree/master/csrf)         	| Cross Site Request Forgery protection       	|
 
