@@ -1,6 +1,7 @@
 package ace
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -22,14 +23,30 @@ func TestJSONResp(t *testing.T) {
 		c.JSON(200, data)
 	})
 
-	result, _ := json.Marshal(data)
+	buf := &bytes.Buffer{}
+	json.NewEncoder(buf).Encode(data)
 
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
 	assert.Equal(200, w.Code)
-	assert.Equal(string(result), w.Body.String())
+	assert.Equal(buf.String(), w.Body.String())
 	assert.Equal("application/json; charset=UTF-8", w.Header().Get("Content-Type"))
+}
+
+func TestStringResp(t *testing.T) {
+	assert := assert.New(t)
+	a := New()
+	a.GET("/", func(c *C) {
+		c.String(200, "123")
+	})
+
+	r, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	a.ServeHTTP(w, r)
+	assert.Equal(200, w.Code)
+	assert.Equal("123", w.Body.String())
+	assert.Equal("text/html; charset=UTF-8", w.Header().Get("Content-Type"))
 }
 
 func TestDownloadResp(t *testing.T) {
@@ -52,13 +69,13 @@ func TestCData(t *testing.T) {
 	a := New()
 
 	a.Use(func(c *C) {
-		c.SetData("test", "123")
+		c.Set("test", "123")
 		c.Next()
 	})
 
 	a.GET("/", func(c *C) {
-		c.GetAllData()
-		c.String(200, c.GetData("test").(string))
+		c.GetAll()
+		c.String(200, c.Get("test").(string))
 	})
 
 	r, _ := http.NewRequest("GET", "/", nil)

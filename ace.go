@@ -2,9 +2,12 @@ package ace
 
 import (
 	"github.com/julienschmidt/httprouter"
+	"github.com/plimble/utils/pool"
 	"net/http"
 	"sync"
 )
+
+var bufPool = pool.NewBufferPool(100)
 
 type Ace struct {
 	*Router
@@ -16,6 +19,7 @@ type Ace struct {
 type PanicHandler func(c *C, rcv interface{})
 type HandlerFunc func(c *C)
 
+//New server
 func New() *Ace {
 	a := &Ace{}
 	a.Router = &Router{
@@ -33,6 +37,7 @@ func New() *Ace {
 	return a
 }
 
+//Default server white recovery and logger middleware
 func Default() *Ace {
 	a := New()
 	a.Use(Recovery())
@@ -40,18 +45,26 @@ func Default() *Ace {
 	return a
 }
 
+//SetPoolSize of buffer
+func (a *Ace) SetPoolSize(poolSize int) {
+	bufPool = pool.NewBufferPool(poolSize)
+}
+
+//Run server with specific address and port
 func (a *Ace) Run(addr string) {
 	if err := http.ListenAndServe(addr, a); err != nil {
 		panic(err)
 	}
 }
 
+//RunTLS server with specific address and port
 func (a *Ace) RunTLS(addr string, cert string, key string) {
 	if err := http.ListenAndServeTLS(addr, cert, key, a); err != nil {
 		panic(err)
 	}
 }
 
+//ServeHTTP implement http.Handler
 func (a *Ace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	a.httprouter.ServeHTTP(w, req)
 }

@@ -51,23 +51,31 @@ func (c *C) JSON(status int, v interface{}) {
 		return
 	}
 
-	result, err := json.Marshal(v)
-	if err != nil {
+	buf := bufPool.Get()
+	defer bufPool.Put(buf)
+
+	if err := json.NewEncoder(buf).Encode(v); err != nil {
 		panic(err)
 	}
 
-	c.Writer.Write(result)
+	c.Writer.Write(buf.Bytes())
 }
 
 //String response with text/html; charset=UTF-8 Content type
 func (c *C) String(status int, format string, val ...interface{}) {
 	c.Writer.Header().Set(contentType, "text/html; charset=UTF-8")
 	c.Writer.WriteHeader(status)
+
+	buf := bufPool.Get()
+	defer bufPool.Put(buf)
+
 	if len(val) == 0 {
-		c.Writer.Write([]byte(format))
+		buf.WriteString(format)
 	} else {
-		c.Writer.Write([]byte(fmt.Sprintf(format, val...)))
+		buf.WriteString(fmt.Sprintf(format, val...))
 	}
+
+	c.Writer.Write(buf.Bytes())
 }
 
 //Download response with application/octet-stream; charset=UTF-8 Content type
@@ -125,20 +133,25 @@ func (c *C) ClientIP() string {
 }
 
 //Set data
-func (c *C) SetData(key string, v interface{}) {
+func (c *C) Set(key string, v interface{}) {
 	if c.data == nil {
 		c.data = make(map[string]interface{})
 	}
 	c.data[key] = v
 }
 
+//SetAll data
+func (c *C) SetAll(data map[string]interface{}) {
+	c.data = data
+}
+
 //Get data
-func (c *C) GetData(key string) interface{} {
+func (c *C) Get(key string) interface{} {
 	return c.data[key]
 }
 
 //GetAllData return all data
-func (c *C) GetAllData() map[string]interface{} {
+func (c *C) GetAll() map[string]interface{} {
 	return c.data
 }
 
