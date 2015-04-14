@@ -187,7 +187,7 @@ type Renderer interface {
 |-----------------------------------------------------	|---------------------------------------------	|
 | [gzip](https://github.com/plimble/ace-contrib/tree/master/gzip)         	| GZIP compress                               	|
 | [cors](https://github.com/plimble/ace-contrib/tree/master/cors)         	| Enable Cross-origin resource sharing (CORS) 	|
-| [sessions](https://github.com/plimble/ace-contrib/tree/master/sessions) 	| Gorilla Sessions                            	|
+| [sessions](https://github.com/plimble/sessions) 													| Sessions                            	|
 | [pongo2](https://github.com/plimble/ace-contrib/tree/master/pongo2)     	| Pongo2 Template Engine                      	|
 | [csrf](https://github.com/plimble/ace-contrib/tree/master/csrf)         	| Cross Site Request Forgery protection       	|
 
