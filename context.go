@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/plimble/sessions"
 	"math"
 	"net/http"
 	"strconv"
@@ -26,9 +27,9 @@ type C struct {
 	index       int8
 	handlers    []HandlerFunc
 	//recovery
-	data    map[string]interface{}
-	Session *session
-	render  Renderer
+	data     map[string]interface{}
+	Sessions *sessions.Sessions
+	render   Renderer
 }
 
 func (a *Ace) createContext(w http.ResponseWriter, r *http.Request) *C {

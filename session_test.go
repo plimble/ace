@@ -1,7 +1,7 @@
 package ace
 
 import (
-	"github.com/gorilla/sessions"
+	"github.com/plimble/sessions/store/cookie"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -11,17 +11,24 @@ import (
 func TestSession(t *testing.T) {
 	a := New()
 
-	store := sessions.NewCookieStore([]byte("test"))
-	a.Session("test", store, nil)
+	store := cookie.NewCookieStore()
+	a.Session(store, nil)
 
 	a.GET("/", func(c *C) {
-		c.Session.Set("test", "abc")
+		session, _ := c.Sessions.Get("test")
+		session.Set("test1", "123")
+		session.Set("test2", 123)
 		c.String(200, "")
 	})
 
 	a.GET("/test", func(c *C) {
-		test := c.Session.GetString("test")
-		c.String(200, test)
+		session, _ := c.Sessions.Get("test")
+		test1 := session.GetString("test1", "")
+		test2 := session.GetInt("test2", 0)
+
+		assert.Equal(t, "123", test1)
+		assert.Equal(t, 123, test2)
+		c.String(200, "")
 	})
 
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -33,6 +40,4 @@ func TestSession(t *testing.T) {
 	req.Header.Set("Cookie", cookie)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, req)
-
-	assert.Equal(t, "abc", w.Body.String())
 }
