@@ -26,10 +26,9 @@ type C struct {
 	Writer      ResponseWriter
 	index       int8
 	handlers    []HandlerFunc
-	//recovery
-	data     map[string]interface{}
-	Sessions *sessions.Sessions
-	render   Renderer
+	data        map[string]interface{}
+	Sessions    *sessions.Sessions
+	render      Renderer
 }
 
 func (a *Ace) createContext(w http.ResponseWriter, r *http.Request) *C {
