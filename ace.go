@@ -19,6 +19,10 @@ type Ace struct {
 type PanicHandler func(c *C, rcv interface{})
 type HandlerFunc func(c *C)
 
+func GetPool() *pool.BufferPool {
+	return bufPool
+}
+
 //New server
 func New() *Ace {
 	a := &Ace{}
