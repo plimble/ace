@@ -1,6 +1,7 @@
 package ace
 
 import (
+	"github.com/plimble/utils/errors2"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -197,26 +198,25 @@ func TestRouteNotFound(t *testing.T) {
 	assert.Equal("test not found", w.Body.String())
 }
 
-func TestPanic(t *testing.T) {
+func TestPanic2(t *testing.T) {
 	assert := assert.New(t)
-	mid := ""
-
 	a := New()
-	a.Use(Recovery())
-	a.Use(func(c *C) {
-		mid = "before panic"
-		c.Next()
+
+	a.Panic(func(c *C, rcv interface{}) {
+		err := rcv.(errors2.Error)
+		c.JSON(err.HttpStatus(), err)
 	})
 
 	a.GET("/", func(c *C) {
-		panic("panic test")
+		c.Panic(errors2.NewNotFound("not found"))
+		c.String(200, "123")
 	})
 
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(500, w.Code)
-	assert.Equal("before panic", mid)
+	assert.Equal(404, w.Code)
+	assert.Equal("{\"message\":\"not found\"}\n", w.Body.String())
 }
 
 func TestStaticPath(t *testing.T) {
