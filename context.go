@@ -273,3 +273,9 @@ func (c *C) MustPostTime(key string, layout string, d time.Time) time.Time {
 
 	return t
 }
+
+func (c *C) Panic(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
