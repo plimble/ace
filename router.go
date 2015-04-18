@@ -126,7 +126,7 @@ func (r *Router) Handle(method, path string, handlers []HandlerFunc) {
 	handlers = r.combineHandlers(handlers)
 	r.ace.httprouter.Handle(method, r.path(path), func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		c := r.ace.createContext(w, req)
-		c.Params = params
+		c.params = params
 		c.handlers = handlers
 		c.Next()
 		r.ace.pool.Put(c)

@@ -21,7 +21,7 @@ const (
 //C is context for every goroutine
 type C struct {
 	writercache responseWriter
-	Params      httprouter.Params
+	params      httprouter.Params
 	Request     *http.Request
 	Writer      ResponseWriter
 	index       int8
@@ -87,6 +87,11 @@ func (c *C) Download(status int, v []byte) {
 //HTML render template engine
 func (c *C) HTML(name string, data interface{}) {
 	c.render.Render(c.Writer, name, data)
+}
+
+//Param get param from route
+func (c *C) Param(name string) string {
+	return c.params.ByName(name)
 }
 
 //ParseJSON decode json to interface{}
