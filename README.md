@@ -27,7 +27,7 @@ Ace is very fast you can see on [this](https://gist.github.com/witooh/1c05c71d95
 ```
 a := ace.New()
 a.GET("/:name", func(c *ace.C) {
-	name := c.Params.ByName("name")
+	name := c.Param("name")
 	c.JSON(200, map[string]string{"hello": name})
 })
 a.Run(":8080")
@@ -61,8 +61,8 @@ a.GET("/", HandlerFunc)
 	})
 
 	a.POST("/form/:id/:name", func(c *ace.C){
-		id := c.Params.ByName("id")
-		name := c.Params.ByName("name")
+		id := c.Param("id")
+		name := c.Param("name")
 		age := c.Request.PostFormValue("age")
 	})
 ```
@@ -128,6 +128,72 @@ a.Get("/", func(c *ace.C){
 })
 ```
 
+## Get Post Form and Query
+```
+	a.Get("/", func(c *ace.C){
+		name := c.MustPostString(key, default_value)
+		age := c.MustPostInt(key, d)
+
+		q := c.MustQueryString(key, default_value)
+		score := c.MustQueryFloat64(key, default_value)
+	})
+```
+
+## Get data From JSON Request
+```
+	a.Get("/", func(c *ace.C){
+		user := struct{
+			Name string `json:"name"`
+		}{}
+
+		c.ParseJSON(&user)
+	})
+
+```
+
+## Panic Response
+Use panic instead of `if err != nil` for response error
+
+```
+	a.Get("/save", func(c *ace.C){
+		user := &User{}
+
+		c.ParseJSON(user)
+
+		//this func return error
+		//if error go to panic handler
+		c.Panic(doSomething1(user))
+		c.Panic(doSomething2(user))
+
+		c.String(201, "created")
+	}
+
+	a.Get("/get", func(c *ace.C){
+		id := c.Param("id")
+
+		user, err := doSomeThing()
+		//if error go to panic handler
+		c.Panic(err)
+
+		c.JSON(200, user)
+	}
+```
+
+####Custom panic response
+
+```
+	a := ace.New()
+	a.Panic(func(c *ace.C, rcv interface{}){
+		switch err := rcv.(type) {
+			case error:
+				c.String(500, "%s\n%s", err, ace.Stack())
+			case CustomError:
+				log.Printf("%s\n%s", err, ace.Stack())
+				c.JSON(err.Code, err.Msg)
+		}
+	})
+```
+
 
 ## Middlewares
 Ace middleware is implemented by custom handler
@@ -154,31 +220,40 @@ You can use store from [sessions](https://github.com/plimble/sessions)
 ```
 import github.com/plimble/sessions/store/cookie
 
-var store = cookie.NewCookieStore()
-a.UseSession(store, nil)
+a := ace.New()
+
+store := cookie.NewCookieStore()
+a.Session(store, nil)
+
+a.GET("/", func(c *ace.C) {
+	//get session name
+	session1 := c.Sessions("test")
+	session1.Set("test1", "123")
+	session1.Set("test2", 123)
+
+	session2 := c.Sessions("foo")
+	session2.Set("baz1", "123")
+	session2.Set("baz2", 123)
+
+	c.String(200, "")
+})
+
+a.GET("/test", func(c *C) {
+	session := c.Sessions("test")
+	//get value from key test1 if not found default value ""
+	test1 := session.GetString("test1", "")
+	test2 := session.GetInt("test2", 0)
+
+	c.String(200, "")
+})
 
 ```
 
-```
-a.GET("/hello", func(c *ace.C) {
-	session, err := c.Sessions.Get("session-name")
-	if err != nil{
-		panic(err)
-	}
-
-	session.Set("key", "value")
-	fmt.Println(c.Session.GetString("key"))
-}
-```
 ##### Logger
 ```
 a.Use(ace.Logger())
 ```
 
-##### Recovery
-```
-a.Use(ace.Recovery())
-```
 
 ## HTML Template Engine
 Ace built on renderer interface. So you can use any template engine
