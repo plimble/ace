@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"net/http"
 	"runtime"
 )
 
@@ -17,7 +15,8 @@ var (
 )
 
 // stack returns a nicely formated stack frame, skipping skip frames
-func stack(skip int) []byte {
+func Stack() []byte {
+	skip := 3
 	buf := new(bytes.Buffer) // the returned data
 	// As we loop, we open files and read them. These variables record the currently
 	// loaded file.
@@ -75,20 +74,4 @@ func function(pc uintptr) []byte {
 	}
 	name = bytes.Replace(name, centerDot, dot, -1)
 	return name
-}
-
-// Recovery returns a middleware that recovers from any panics and writes a 500 if there was one.
-// While Martini is in development mode, Recovery will also output the panic as HTML.
-func Recovery() HandlerFunc {
-	return func(c *C) {
-		defer func() {
-			if err := recover(); err != nil {
-				stack := stack(3)
-				log.Printf("PANIC: %s\n%s", err, stack)
-				c.Writer.WriteHeader(http.StatusInternalServerError)
-			}
-		}()
-
-		c.Next()
-	}
 }

@@ -2,8 +2,19 @@ package ace
 
 import (
 	"github.com/julienschmidt/httprouter"
+	"log"
 	"net/http"
 )
+
+var defaultPanic = func(c *C, rcv interface{}) {
+	stack := Stack()
+	log.Printf("PANIC: %s\n%s", rcv, stack)
+	c.String(500, "<pre>%s\n%s</pre>", rcv, stack)
+}
+
+var defaultNotfound = func(c *C) {
+	c.String(404, "not found")
+}
 
 //Router http router
 type Router struct {
@@ -66,22 +77,12 @@ func (r *Router) Group(path string, handlers ...HandlerFunc) *Router {
 
 //RouteNotFound call when route does not match
 func (r *Router) RouteNotFound(h HandlerFunc) {
-	handlers := r.combineHandlers([]HandlerFunc{h})
-	r.ace.httprouter.NotFound = func(w http.ResponseWriter, req *http.Request) {
-		c := r.ace.createContext(w, req)
-		c.handlers = handlers
-		c.Next()
-		r.ace.pool.Put(c)
-	}
+	r.ace.notfoundFunc = h
 }
 
 //Panic call when panic was called
 func (r *Router) Panic(h PanicHandler) {
-	r.ace.httprouter.PanicHandler = func(w http.ResponseWriter, req *http.Request, rcv interface{}) {
-		c := r.ace.createContext(w, req)
-		h(c, rcv)
-		r.ace.pool.Put(c)
-	}
+	r.ace.panicFunc = h
 }
 
 //Handler convert ace.HandlerFunc to http.Handler

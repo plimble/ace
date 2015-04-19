@@ -14,7 +14,6 @@ func TestPanicInHandler(t *testing.T) {
 	// SETUP
 	log.SetOutput(bytes.NewBuffer(nil)) // Disable panic logs for testing
 	r := New()
-	r.Use(Recovery())
 	r.GET("/recovery", func(_ *C) {
 		panic("Oupps, Houston, we have a problem")
 	})
@@ -37,7 +36,6 @@ func TestPanicWithAbort(t *testing.T) {
 	// SETUP
 	log.SetOutput(bytes.NewBuffer(nil))
 	r := New()
-	r.Use(Recovery())
 	r.GET("/recovery", func(c *C) {
 		c.AbortWithStatus(500)
 		panic("Oupps, Houston, we have a problem")

@@ -11,9 +11,11 @@ var bufPool = pool.NewBufferPool(100)
 
 type Ace struct {
 	*Router
-	httprouter *httprouter.Router
-	pool       sync.Pool
-	render     Renderer
+	httprouter   *httprouter.Router
+	pool         sync.Pool
+	render       Renderer
+	panicFunc    PanicHandler
+	notfoundFunc HandlerFunc
 }
 
 type PanicHandler func(c *C, rcv interface{})
@@ -31,6 +33,8 @@ func New() *Ace {
 		prefix:   "/",
 		ace:      a,
 	}
+	a.panicFunc = defaultPanic
+	a.notfoundFunc = defaultNotfound
 	a.httprouter = httprouter.New()
 	a.pool.New = func() interface{} {
 		c := &C{}
@@ -38,13 +42,25 @@ func New() *Ace {
 		c.Writer = &c.writercache
 		return c
 	}
+
+	a.httprouter.PanicHandler = func(w http.ResponseWriter, req *http.Request, rcv interface{}) {
+		c := a.createContext(w, req)
+		a.panicFunc(c, rcv)
+		a.pool.Put(c)
+	}
+
+	a.httprouter.NotFound = func(w http.ResponseWriter, req *http.Request) {
+		c := a.createContext(w, req)
+		a.notfoundFunc(c)
+		a.pool.Put(c)
+	}
+
 	return a
 }
 
 //Default server white recovery and logger middleware
 func Default() *Ace {
 	a := New()
-	a.Use(Recovery())
 	a.Use(Logger())
 	return a
 }
