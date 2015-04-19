@@ -15,13 +15,9 @@ func TestSession(t *testing.T) {
 	a.Session(store, nil)
 
 	a.GET("/", func(c *C) {
-		session1 := c.Sessions("test")
-		session1.Set("test1", "123")
-		session1.Set("test2", 123)
-
-		session2 := c.Sessions("foo")
-		session2.Set("baz1", "123")
-		session2.Set("baz2", 123)
+		session := c.Sessions("test")
+		session.Set("test1", "123")
+		session.Set("test2", 123)
 
 		c.String(200, "")
 	})
