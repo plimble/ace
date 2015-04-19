@@ -33,11 +33,11 @@ func (a *Ace) Session(store sessions.Store, options *SessionOptions) {
 	manager := sessions.New(10000, store, sessionOptions)
 
 	a.Use(func(c *C) {
-		c.Sessions = manager.GetSessions(c.Request)
-		defer manager.Close(c.Sessions)
+		c.sessions = manager.GetSessions(c.Request)
+		defer manager.Close(c.sessions)
 
 		c.Writer.Before(func(ResponseWriter) {
-			c.Sessions.Save(c.Writer)
+			c.sessions.Save(c.Writer)
 		})
 
 		c.Next()

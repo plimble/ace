@@ -27,7 +27,7 @@ type C struct {
 	index       int8
 	handlers    []HandlerFunc
 	data        map[string]interface{}
-	Sessions    *sessions.Sessions
+	sessions    *sessions.Sessions
 	render      Renderer
 }
 
@@ -95,9 +95,9 @@ func (c *C) Param(name string) string {
 }
 
 //ParseJSON decode json to interface{}
-func (c *C) ParseJSON(v interface{}) error {
+func (c *C) ParseJSON(v interface{}) {
 	defer c.Request.Body.Close()
-	return json.NewDecoder(c.Request.Body).Decode(v)
+	c.Panic(json.NewDecoder(c.Request.Body).Decode(v))
 }
 
 //HTTPLang get first language from HTTP Header
@@ -157,6 +157,13 @@ func (c *C) Get(key string) interface{} {
 //GetAllData return all data
 func (c *C) GetAll() map[string]interface{} {
 	return c.data
+}
+
+func (c *C) Sessions(name string) *sessions.Session {
+	session, err := c.sessions.Get(name)
+	c.Panic(err)
+
+	return session
 }
 
 func (c *C) MustQueryInt(key string, d int) int {
