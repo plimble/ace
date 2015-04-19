@@ -223,7 +223,7 @@ import github.com/plimble/sessions/store/cookie
 a := ace.New()
 
 store := cookie.NewCookieStore()
-a.Session(store, nil)
+a.Use(ace.Session(store, nil))
 
 a.GET("/", func(c *ace.C) {
 	//get session name

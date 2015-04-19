@@ -17,7 +17,7 @@ type SessionOptions struct {
 }
 
 //Session use session middleware
-func (a *Ace) Session(store sessions.Store, options *SessionOptions) {
+func Session(store sessions.Store, options *SessionOptions) HandlerFunc {
 	var sessionOptions *sessions.Options
 
 	if options != nil {
@@ -30,9 +30,9 @@ func (a *Ace) Session(store sessions.Store, options *SessionOptions) {
 		}
 	}
 
-	manager := sessions.New(10000, store, sessionOptions)
+	manager := sessions.New(512, store, sessionOptions)
 
-	a.Use(func(c *C) {
+	return func(c *C) {
 		c.sessions = manager.GetSessions(c.Request)
 		defer manager.Close(c.sessions)
 
@@ -41,5 +41,5 @@ func (a *Ace) Session(store sessions.Store, options *SessionOptions) {
 		})
 
 		c.Next()
-	})
+	}
 }

@@ -12,7 +12,7 @@ func TestSession(t *testing.T) {
 	a := New()
 
 	store := cookie.NewCookieStore()
-	a.Session(store, nil)
+	a.Use(Session(store, nil))
 
 	a.GET("/", func(c *C) {
 		session := c.Sessions("test")
