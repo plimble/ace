@@ -17,10 +17,8 @@ func Logger() HandlerFunc {
 
 	return func(c *C) {
 		start := time.Now()
-		l.Printf("Started %s %s", c.Request.Method, c.Request.URL.Path)
-
 		c.Next()
 
-		l.Printf("Completed %v %s in %v", c.Writer.Status(), http.StatusText(c.Writer.Status()), time.Since(start))
+		l.Printf("%s %s %v %s in %v", c.Request.Method, c.Request.URL.Path, c.Writer.Status(), http.StatusText(c.Writer.Status()), time.Since(start))
 	}
 }
