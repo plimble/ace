@@ -70,7 +70,7 @@ func (r *Router) Group(path string, handlers ...HandlerFunc) *Router {
 	handlers = r.combineHandlers(handlers)
 	return &Router{
 		handlers: handlers,
-		prefix:   path,
+		prefix:   r.path(path),
 		ace:      r.ace,
 	}
 }
