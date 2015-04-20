@@ -102,6 +102,35 @@ func TestHTTPMethod(t *testing.T) {
 	assert.Equal(307, w.Code)
 }
 
+func TestNestedGroupRoute(t *testing.T) {
+	assert := assert.New(t)
+
+	a := Default()
+	g1 := a.Group("/g1", testHandler)
+	g2 := g1.Group("/g2", testHandler)
+	g3 := g2.Group("/g3", testHandler)
+
+	g3.GET("/", func(c *C) {
+		c.String(200, "g3")
+	})
+
+	g3.GET("/test", func(c *C) {
+		c.String(200, "g3/test")
+	})
+
+	r, _ := http.NewRequest("GET", "/g1/g2/g3/", nil)
+	w := httptest.NewRecorder()
+	a.ServeHTTP(w, r)
+	assert.Equal(200, w.Code)
+	assert.Equal("g3", w.Body.String())
+
+	r, _ = http.NewRequest("GET", "/g1/g2/g3/test", nil)
+	w = httptest.NewRecorder()
+	a.ServeHTTP(w, r)
+	assert.Equal(200, w.Code)
+	assert.Equal("g3/test", w.Body.String())
+}
+
 func TestGroupRoute(t *testing.T) {
 	assert := assert.New(t)
 
