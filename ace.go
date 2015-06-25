@@ -49,11 +49,11 @@ func New() *Ace {
 		a.pool.Put(c)
 	}
 
-	a.httprouter.NotFound = func(w http.ResponseWriter, req *http.Request) {
+	a.httprouter.NotFound = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		c := a.createContext(w, req)
 		a.notfoundFunc(c)
 		a.pool.Put(c)
-	}
+	})
 
 	return a
 }
