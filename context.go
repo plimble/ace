@@ -160,10 +160,7 @@ func (c *C) GetAll() map[string]interface{} {
 }
 
 func (c *C) Sessions(name string) *sessions.Session {
-	session, err := c.sessions.Get(name)
-	c.Panic(err)
-
-	return session
+	return c.sessions.Get(name)
 }
 
 func (c *C) MustQueryInt(key string, d int) int {
