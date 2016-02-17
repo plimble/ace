@@ -1,4 +1,4 @@
-ACE [![godoc badge](http://godoc.org/github.com/plimble/ace?status.png)](http://godoc.org/github.com/plimble/ace)   [![gocover badge](http://gocover.io/_badge/github.com/plimble/ace?t=3)](http://gocover.io/github.com/plimble/ace) [![Build Status](https://api.travis-ci.org/plimble/ace.svg?branch=master&t=3)](https://travis-ci.org/plimble/ace) [![Go Report Card](http://goreportcard.com/badge/plimble/ace?t=3)](http:/goreportcard.com/report/plimble/ace)
+ACE [![godoc badge](http://godoc.org/github.com/plimble/ace?status.svg)](http://godoc.org/github.com/plimble/ace)   [![gocover badge](http://gocover.io/_badge/github.com/plimble/ace?t=3)](http://gocover.io/github.com/plimble/ace) [![Build Status](https://api.travis-ci.org/plimble/ace.svg?branch=master&t=3)](https://travis-ci.org/plimble/ace) [![Go Report Card](http://goreportcard.com/badge/plimble/ace?t=3)](http:/goreportcard.com/report/plimble/ace)
 ========
 
 Blazing fast Go Web Framework
@@ -13,18 +13,18 @@ go get github.com/plimble/ace
 
 #### Import
 
-```
+```go
 import "github.com/plimble/ace"
 ```
 
 ## Performance
 Ace is very fast you can see on [this](https://gist.github.com/witooh/1c05c71d9510b2020e48)
 
-##Usage
+## Usage
 
 #### Quick Start
 
-```
+```go
 a := ace.New()
 a.GET("/:name", func(c *ace.C) {
 	name := c.Param("name")
@@ -34,7 +34,8 @@ a.Run(":8080")
 ```
 
 Default Middleware (Logger, Recovery)
-```
+
+```go
 a := ace.Default()
 a.GET("/", func(c *ace.C) {
 	c.String(200,"Hello ACE")
@@ -43,7 +44,8 @@ a.Run(":8080")
 ```
 
 ### Router
-```
+
+```go
 a.DELETE("/", HandlerFunc)
 a.HEAD("/", HandlerFunc)
 a.OPTIONS("/", HandlerFunc)
@@ -52,52 +54,64 @@ a.PUT("/", HandlerFunc)
 a.POST("/", HandlerFunc)
 a.GET("/", HandlerFunc)
 ```
+
 ##### Example
-```
-	a := ace.New()
 
-	a.GET("/", func(c *ace.C){
-		c.String(200, "Hello world")
-	})
+```go
+a := ace.New()
 
-	a.POST("/form/:id/:name", func(c *ace.C){
-		id := c.Param("id")
-		name := c.Param("name")
-		age := c.Request.PostFormValue("age")
-	})
+a.GET("/", func(c *ace.C){
+	c.String(200, "Hello world")
+})
+
+a.POST("/form/:id/:name", func(c *ace.C){
+	id := c.Param("id")
+	name := c.Param("name")
+	age := c.Request.PostFormValue("age")
+})
 ```
 
 ## Response
+
 ##### JSON
+
 ```go
-	data := struct{
-		Name string `json:"name"`
-	}{
-		Name: "John Doe",
-	}
-	c.JSON(200, data)
+data := struct{
+	Name string `json:"name"`
+}{
+	Name: "John Doe",
+}
+c.JSON(200, data)
 ```
+
 ##### String
+
 ```go
-	c.String(200, "Hello Ace")
+c.String(200, "Hello Ace")
 ```
+
 ##### Download
+
+```go
+//application/octet-stream
+c.Download(200, []byte("Hello Ace"))
 ```
-	//application/octet-stream
-	c.Download(200, []byte("Hello Ace"))
-```
+
 ##### HTML
+
+```go
+c.HTML("index.html")
 ```
-	c.HTML("index.html")
-```
+
 ##### Redirect
-```
-	c.Redirect("/home")
+
+```go
+c.Redirect("/home")
 ```
 
 ## Group Router
 
-```
+```go
 g := a.Group("/people", func(c *ace.C) {
 	fmt.Println("before route func")
 	c.Next()
@@ -115,7 +129,9 @@ g.POST("/:name", func(c *ace.C) {
 ```
 
 ## Data
+
 Set/Get data in any HandlerFunc
+
 ```go
 a.Use(func(c *ace.C){
 	c.SetData("isLogin", true)
@@ -129,79 +145,85 @@ a.Get("/", func(c *ace.C){
 ```
 
 ## Get Post Form and Query
-```
-	a.Get("/", func(c *ace.C){
-		name := c.MustPostString(key, default_value)
-		age := c.MustPostInt(key, d)
 
-		q := c.MustQueryString(key, default_value)
-		score := c.MustQueryFloat64(key, default_value)
-	})
+```go
+a.Get("/", func(c *ace.C){
+	name := c.MustPostString(key, default_value)
+	age := c.MustPostInt(key, d)
+
+	q := c.MustQueryString(key, default_value)
+	score := c.MustQueryFloat64(key, default_value)
+})
 ```
 
 ## Get data From JSON Request
-```
-	a.Get("/", func(c *ace.C){
-		user := struct{
-			Name string `json:"name"`
-		}{}
 
-		c.ParseJSON(&user)
-	})
+```go
+a.Get("/", func(c *ace.C){
+	user := struct{
+		Name string `json:"name"`
+	}{}
 
+	c.ParseJSON(&user)
+})
 ```
 
 ## Panic Response
+
 Use panic instead of `if err != nil` for response error
 
+```go
+a.Get("/save", func(c *ace.C){
+	user := &User{}
+
+	c.ParseJSON(user)
+
+	//this func return error
+	//if error go to panic handler
+	c.Panic(doSomething1(user))
+	c.Panic(doSomething2(user))
+
+	c.String(201, "created")
+}
+
+a.Get("/get", func(c *ace.C){
+	id := c.Param("id")
+
+	user, err := doSomeThing()
+	//if error go to panic handler
+	c.Panic(err)
+
+	c.JSON(200, user)
+}
 ```
-	a.Get("/save", func(c *ace.C){
-		user := &User{}
 
-		c.ParseJSON(user)
+#### Custom panic response
 
-		//this func return error
-		//if error go to panic handler
-		c.Panic(doSomething1(user))
-		c.Panic(doSomething2(user))
-
-		c.String(201, "created")
+```go
+a := ace.New()
+a.Panic(func(c *ace.C, rcv interface{}){
+	switch err := rcv.(type) {
+		case error:
+			c.String(500, "%s\n%s", err, ace.Stack())
+		case CustomError:
+			log.Printf("%s\n%s", err, ace.Stack())
+			c.JSON(err.Code, err.Msg)
 	}
-
-	a.Get("/get", func(c *ace.C){
-		id := c.Param("id")
-
-		user, err := doSomeThing()
-		//if error go to panic handler
-		c.Panic(err)
-
-		c.JSON(200, user)
-	}
-```
-
-####Custom panic response
-
-```
-	a := ace.New()
-	a.Panic(func(c *ace.C, rcv interface{}){
-		switch err := rcv.(type) {
-			case error:
-				c.String(500, "%s\n%s", err, ace.Stack())
-			case CustomError:
-				log.Printf("%s\n%s", err, ace.Stack())
-				c.JSON(err.Code, err.Msg)
-		}
-	})
+})
 ```
 
 
 ## Middlewares
+
 Ace middleware is implemented by custom handler
-```
+
+```go
 type HandlerFunc func(c *C)
 ```
-#####Example
-```
+
+##### Example
+
+```go
 a := ace.New()
 a.Use(ace.Logger())
 ```
@@ -209,7 +231,8 @@ a.Use(ace.Logger())
 ### Built-in Middlewares
 
 ##### Serve Static
-```
+
+```go
 a.Static("/assets", "./img")
 ```
 
@@ -217,7 +240,7 @@ a.Static("/assets", "./img")
 
 You can use store from [sessions](https://github.com/plimble/sessions)
 
-```
+```go
 import github.com/plimble/sessions/store/cookie
 
 a := ace.New()
@@ -246,24 +269,23 @@ a.GET("/test", func(c *C) {
 
 	c.String(200, "")
 })
-
 ```
 
 ##### Logger
-```
+
+```go
 a.Use(ace.Logger())
 ```
 
-
 ## HTML Template Engine
+
 Ace built on renderer interface. So you can use any template engine
 
-```
+```go
 type Renderer interface {
 	Render(w http.ResponseWriter, name string, data interface{})
 }
 ```
-
 
 ### ACE Middlewares
 
@@ -275,6 +297,6 @@ type Renderer interface {
 | [pongo2](https://github.com/plimble/ace-contrib/tree/master/pongo2)     	| Pongo2 Template Engine                      	|
 | [csrf](https://github.com/plimble/ace-contrib/tree/master/csrf)         	| Cross Site Request Forgery protection       	|
 
-###Contributing
+### Contributing
 
 If you'd like to help out with the project. You can put up a Pull Request.
