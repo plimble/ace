@@ -35,6 +35,8 @@ type responseWriter struct {
 
 func (rw *responseWriter) reset(w http.ResponseWriter) {
 	rw.ResponseWriter = w
+	rw.status = 0
+	rw.size = 0
 }
 
 func (rw *responseWriter) WriteHeader(s int) {
